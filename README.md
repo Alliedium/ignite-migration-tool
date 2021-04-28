@@ -16,7 +16,7 @@ Apache Ignite Migration Tool is an open-source library for applying Apache Ignit
  - Apache Ignite cluster from which the data is migrated from and the cluster to which the data is migrated to should be different clusters
  - All nodes of Apache Ignite cluster to which the data is migrated to should have access to new defintions of all data classes (i.e. corresponding to the transformed schema). This can be achived by placing jar file with new data classes definitions to each node's class path. It is the tool's user responsibility to make sure that this assumption holds, the tool doesn't automate this process in any way.
  - Each cache is configured via `QueryEntity`, all cache fields not present in `QueryEntity` are invisible to the tool and won't be backed up.
- - Only those caches for which `persistenceEnabled=true` are visible to the tool.
+ - Only those caches for which `persistenceEnabled=true` are visible to the tool, the in-memory only caches are ignored.
 
 
 ## Getting started
