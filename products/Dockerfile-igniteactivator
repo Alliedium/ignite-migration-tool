@@ -1,0 +1,23 @@
+FROM maven:3-jdk-8-slim
+
+ARG ACTIVATOR_ADD_ARGS="-t 30 --wait"
+
+COPY pom.xml /app/
+COPY ./igniteactivator/src /app/igniteactivator/src/
+COPY ./igniteactivator/pom.xml /app/igniteactivator/
+COPY ./core/config/client.xml /app/config/
+COPY ./core/ignite/config/ignite-log4j.xml /app/ignite/config/
+
+RUN cd /app/igniteactivator/ \
+    && mvn -B clean package \
+    && cp -f /app/igniteactivator/target/igniteactivator-1.0.0-jar-with-dependencies.jar /app/
+
+ENV IGNITE_HOST=ignite
+ENV ACTIVATOR_ADD_ARGS=${ACTIVATOR_ADD_ARGS}
+ENV ADD_JVM_OPTS="-Xms512m -Xmx512m -XX:+UseG1GC -DIGNITE_HOME=/app/ignite -DIGNITE_LOG_DIR=/app/logs -DIGNITE_CONFIG_HOME=file:/app/config"
+
+WORKDIR /app/
+
+ENTRYPOINT cd /app && \
+           java -Djava.net.preferIPv4Stack=true $ADD_JVM_OPTS \
+             -jar ./igniteactivator-1.0.0-jar-with-dependencies.jar -n $IGNITE_NODES $ACTIVATOR_ADD_ARGS

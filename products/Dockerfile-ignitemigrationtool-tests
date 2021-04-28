@@ -1,0 +1,27 @@
+FROM maven:3-jdk-8-slim
+
+ARG WAIT_BEFORE_START_IN_SEC=10
+
+COPY pom.xml /appl/
+
+# exclude modules which are not needed from parent pom.xml
+RUN sed '/igniteactivator/d' /appl/pom.xml > /appl/pom_1.xml
+RUN sed '/demo/d' /appl/pom_1.xml > /appl/pom.xml
+
+COPY ./test/ /appl/test/
+COPY ./core/src /appl/core/src/
+COPY ./core/pom.xml /appl/core/
+COPY ./core/config/client.xml /appl/core/config/
+COPY ./core/ignite/config/ignite-log4j.xml /appl/core/ignite/config/
+
+ENV IGNITE_HOST=ignite
+ENV MAVEN_OPTS="-Xms1024m -Xmx2048m -XX:+UseG1GC"
+ENV ADD_JVM_OPTS="-DIGNITE_QUIET=false -Djava.net.preferIPv4Stack=true -DIGNITE_CONFIG_HOME=file:/appl/core/config -DIGNITE_HOME=/appl/core/ignite -DIGNITE_LOG_DIR=/appl/core/logs"
+ENV WAIT_BEFORE_START_IN_SEC=${WAIT_BEFORE_START_IN_SEC}
+
+ENTRYPOINT cd /appl/ \
+           && sleep $WAIT_BEFORE_START_IN_SEC \
+           && mkdir -p /test-reports && rm -rf /test-reports/* && chmod 777 -R /test-reports && chmod g+s /test-reports \
+           && mkdir -p /appl/core/logs \
+           && chmod 777 -R /appl/core/logs \
+           && mvn -B $ADD_JVM_OPTS -DbuildDirectory=/test-reports test

@@ -1,0 +1,11 @@
+FROM apacheignite/ignite:2.10.0
+
+COPY ./core/config/server.xml /app/config/
+
+ENV ADD_JVM_OPTS="-Xms1024m -Xmx2048m -XX:+UseG1GC"
+ENV IGNITE_QUIET=false
+ENV IGNITE_HOST=ignite
+ENV CONFIG_URI=/app/config/server.xml
+ENV JVM_OPTS="$JVM_OPTS -Djava.net.preferIPv4Stack=true"
+
+CMD export JVM_OPTS="$JVM_OPTS $ADD_JVM_OPTS" && $IGNITE_HOME/run.sh

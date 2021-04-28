@@ -1,0 +1,34 @@
+version: '3.4'
+services:
+    ignite:
+        build:
+          context: .
+          dockerfile: Dockerfile-ignite
+        deploy:
+          mode: replicated
+          replicas: 1
+        ports:
+          - 11211:11211
+          - 47100:47100
+          - 47500:47500
+          - 49112:49112
+          - 10800:10800
+
+    igniteactivator:
+        build:
+          context: .
+          dockerfile: Dockerfile-igniteactivator
+        environment:
+          - IGNITE_NODES=1
+        depends_on:
+          - ignite
+
+    tests_ignitemigrationtool:
+        build:
+            context: .
+            dockerfile: Dockerfile-ignitemigrationtool-tests
+        depends_on:
+            - ignite
+            - igniteactivator
+        volumes:
+          - ./core/tests-ignitemigrationtool:/test-reports
