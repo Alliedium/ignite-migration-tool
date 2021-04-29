@@ -15,6 +15,9 @@ boolean isAfterTestsToBeRun = false
 
 pipeline {
     agent any
+    options {
+        disableConcurrentBuilds()
+    }
     stages {
         stage('Init') {
             options {
