@@ -34,7 +34,8 @@ public class IgniteCacheFieldMetaBuilder implements IIgniteCacheFieldMetaBuilder
         Map<String, String> queryEntityFieldsInfo = getQueryEntityFieldsInfo();
 
         for (String fieldName : binaryObject.type().fieldNames()) {
-            String typeInfoFromQueryEntity = queryEntityFieldsInfo.get(fieldName.toUpperCase());
+            String typeInfoFromQueryEntity = Objects.requireNonNull(queryEntityFieldsInfo.get(fieldName.toUpperCase()),
+                    String.format("Query entity for field [%s] was not found", fieldName));
             String typeInfo = TypesResolver.toAvroType(typeInfoFromQueryEntity);
             IIgniteBinaryDataConverter fieldDataConverter;
 

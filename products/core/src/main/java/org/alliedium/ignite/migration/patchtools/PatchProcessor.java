@@ -3,7 +3,6 @@ package org.alliedium.ignite.migration.patchtools;
 import org.alliedium.ignite.migration.Dispatcher;
 import org.alliedium.ignite.migration.IDataWriter;
 import org.alliedium.ignite.migration.TasksExecutor;
-import org.alliedium.ignite.migration.test.TestDirectories;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
 import org.alliedium.ignite.migration.serializer.AvroDeserializer;
@@ -17,13 +16,6 @@ public class PatchProcessor implements IPatchProcessor {
     private final IPatch patch;
     private final Path sourcePath;
     private final Path destinationPath;
-
-    public PatchProcessor(IPatch patch) {
-        this.patch = patch;
-        TestDirectories testDirectories = new TestDirectories();
-        sourcePath = testDirectories.getAvroTestSetPath();
-        destinationPath = testDirectories.getAvroMainPath();
-    }
 
     public PatchProcessor(Path sourcePath, Path destinationPath, IPatch patch) {
         this.patch = patch;

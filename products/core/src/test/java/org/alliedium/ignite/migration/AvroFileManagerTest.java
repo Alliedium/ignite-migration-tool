@@ -103,10 +103,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         // # ignite test data check
         clientAPI.assertAtomicLongs(atomicLongDataMap);
 
-        IgniteCache<Integer, City> cityIgniteCache = ignite.cache(cacheNames.get(0));
-        for (int i = 0; i < testCities.size(); i++) {
-            Assert.assertEquals(testCities.get(i), cityIgniteCache.get(i));
-        }
+        clientAPI.assertIgniteCacheEqualsList(testCities, cacheNames.get(0));
 
         Assert.assertNotNull(ignite.cache(cacheNames.get(1)));
 
@@ -120,14 +117,11 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         igniteCache.put(0, new City("test_city", "test_district", random.nextInt()));
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
-        try {
-            controller.serializeDataToAvro(avroTestSet);
-        } catch(Exception e) {
-            assertTrue(e.getMessage().contains("ignite migration tool does not work without ignite cache query entities"));
-            return;
-        }
-
-        Assert.fail("This is bad path test and it did not fail");
+        Action action = () -> controller.serializeDataToAvro(avroTestSet);
+        BadPathAsserter badPathAsserter = new BadPathAsserter(action);
+        badPathAsserter.assertExceptionThrownAndMessageContains(
+                "ignite migration tool does not work without ignite cache query entities");
+        badPathAsserter.invokeActionApplyAssertions();
     }
 
     public void processDataSetAndCompareWithInitial() throws IOException {

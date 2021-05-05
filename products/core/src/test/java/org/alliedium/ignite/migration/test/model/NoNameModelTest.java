@@ -29,12 +29,8 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        IgniteCache<Integer, NoNameModel> igniteCache = ignite.createCache(cacheConfiguration);
-        List<NoNameModel> noNameModels = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            noNameModels.add(i, new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())));
-            igniteCache.put(i, noNameModels.get(i));
-        }
+        List<NoNameModel> noNameModels = createCacheAndFillWithData(cacheConfiguration,
+                () -> new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())), 10);
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
         controller.serializeDataToAvro(avroTestSet);
@@ -43,9 +39,6 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
 
         controller.deserializeDataFromAvro(avroTestSet);
 
-        igniteCache = ignite.cache(cacheName);
-        for (int i = 0; i < noNameModels.size(); i++) {
-            Assert.assertEquals(noNameModels.get(i), igniteCache.get(i));
-        }
+        clientAPI.assertIgniteCacheEqualsList(noNameModels, cacheName);
     }
 }

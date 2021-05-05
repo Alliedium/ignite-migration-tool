@@ -47,6 +47,10 @@ public class Controller {
         this.dispatcherFactory = new DispatcherFactory(propertiesResolver);
     }
 
+    /**
+     * Represents serialize operation for ignite data
+     * @param rootSerializedDataPath - path to which ignite cluster data will be serialized
+     */
     public void serializeDataToAvro(Path rootSerializedDataPath) {
         ISerializer avroSerializer = new AvroSerializer(rootSerializedDataPath);
         Dispatcher<ICacheMetaData> cacheMetaDataDispatcher = dispatcherFactory.newDispatcher();
@@ -66,6 +70,19 @@ public class Controller {
         tasksExecutor.shutdown();
     }
 
+    /**
+     * Represents a deserialize operation of avro file right into Apache Ignite.
+     * In case a cache exists both in ignite and in provided avro files,
+     * the Deserialize operation will deserialize and override values by keys, no other objects would be touched.
+     * For example if a cache contains the following data:
+     *      [first : firstObj, second : secondObj]
+     * And serialized data contains the following data:
+     *      [first : thirdObj]
+     * The result of deserialize operation will be the following:
+     *      [first : thirdObj, second : secondObj]
+     *
+     * @param avroFilesPath - path to avro files which contain serialized data.
+     */
     public void deserializeDataFromAvro(Path avroFilesPath) {
         IAvroDeserializer avroDeserializer = new AvroDeserializer(avroFilesPath);
 

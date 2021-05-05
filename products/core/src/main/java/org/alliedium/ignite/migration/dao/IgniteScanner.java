@@ -49,11 +49,15 @@ public class IgniteScanner implements IIgniteReader {
                      IDispatcher<ICacheData> cacheDataDispatcher, IDispatcher<Map.Entry<String, Long>> atomicLongsDispatcher) {
         try {
             igniteDAO.getCacheNames().forEach(igniteCacheName -> {
-                logger.info("Starting cache processing of " + igniteCacheName);
-                convertCacheToDTO(igniteDAO, igniteCacheName, cacheMetaDataDispatcher, cacheDataDispatcher);
-                logger.info("Processed cache " + igniteCacheName);
+               try {
+                   logger.info("Starting cache processing of " + igniteCacheName);
+                   convertCacheToDTO(igniteDAO, igniteCacheName, cacheMetaDataDispatcher, cacheDataDispatcher);
+                   logger.info("Processed cache " + igniteCacheName);
+               } catch (Exception e) {
+                   throw new IllegalStateException(
+                           String.format("cache name: %s, %s", igniteCacheName, e.getMessage()), e);
+               }
             });
-
 
             atomicNamesProvider.getAtomicNames().forEach(atomicName -> {
                 IgniteAtomicLong atomicLong = ignite.atomicLong(atomicName, 0, false);
