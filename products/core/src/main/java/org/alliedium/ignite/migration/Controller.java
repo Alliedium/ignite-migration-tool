@@ -21,8 +21,8 @@ import java.util.Map;
 import org.apache.ignite.Ignite;
 
 /**
- * Controller is a unit responsible for CLI general commands processing: data serialization (from ignite to avro) and deserialization (from avro to ignite).
- * It requires an ignite connection to be passed in on the initialization stage.
+ * Controller is a unit responsible for CLI general commands processing: data serialization (from Apache Ignite to avro) and deserialization (from avro to ignite).
+ * It requires an Apache Ignite connection to be passed in on the initialization stage.
  * Controller is used to be a linker between two general application modules: DAO and Serializer.
  *
  * @see ISerializer
@@ -48,8 +48,8 @@ public class Controller {
     }
 
     /**
-     * Represents serialize operation for ignite data
-     * @param rootSerializedDataPath - path to which ignite cluster data will be serialized
+     * Represents serialize operation for Apache Ignite data
+     * @param rootSerializedDataPath - path to which Apache Ignite cluster data will be serialized
      */
     public void serializeDataToAvro(Path rootSerializedDataPath) {
         ISerializer avroSerializer = new AvroSerializer(rootSerializedDataPath);
@@ -72,7 +72,7 @@ public class Controller {
 
     /**
      * Represents a deserialize operation of avro file right into Apache Ignite.
-     * In case a cache exists both in ignite and in provided avro files,
+     * In case a cache exists both in Apache Ignite and in provided avro files,
      * the Deserialize operation will deserialize and override values by keys, no other objects would be touched.
      * For example if a cache contains the following data:
      *      [first : firstObj, second : secondObj]

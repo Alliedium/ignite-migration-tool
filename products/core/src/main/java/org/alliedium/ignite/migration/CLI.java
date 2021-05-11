@@ -33,8 +33,8 @@ public class CLI {
         SLF4JBridgeHandler.install();
 
         Options options = new Options();
-        options.addOption("s", PropertyNames.CLI.SERIALIZE, false, "Serialize ignite cache stored data, save serialized data on disk");
-        options.addOption("d", PropertyNames.CLI.DESERIALIZE, false, "Deserialize disk stored data, restore ignite caches, upload deserialized data into restored caches");
+        options.addOption("s", PropertyNames.CLI.SERIALIZE, false, "Serialize Apache Ignite cache stored data, save serialized data on disk");
+        options.addOption("d", PropertyNames.CLI.DESERIALIZE, false, "Deserialize disk stored data, restore Apache Ignite caches, upload deserialized data into restored caches");
         options.addOption("p", PropertyNames.CLI.PATH, true, "Path for data serialization/deserialization (default is 'avro')");
         options.addOption("h", PropertyNames.CLI.HELP, false, "Print this help");
 

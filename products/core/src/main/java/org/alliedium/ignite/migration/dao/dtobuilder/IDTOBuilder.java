@@ -1,7 +1,7 @@
 package org.alliedium.ignite.migration.dao.dtobuilder;
 
 /**
- * Provides a functionality of building correspondent DTO objects from ignite data.
+ * Provides a functionality of building correspondent DTO objects from Apache Ignite data.
  *
  * @param <T>
  */

@@ -8,8 +8,8 @@ import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
 
 /**
- * Uses the provided ignite connection to access an ignite data, reads meta-data and data from
- * all the ignite caches and distributes data free from Ignite-specific class references.
+ * Uses the provided Apache Ignite connection to access an Apache Ignite data, reads meta-data and data from
+ * all the Apache Ignite caches and distributes data free from Ignite-specific class references.
  *
  * @see ICacheMetaData
  * @see ICacheData

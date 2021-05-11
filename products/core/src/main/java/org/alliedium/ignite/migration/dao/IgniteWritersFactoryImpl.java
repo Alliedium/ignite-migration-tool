@@ -13,9 +13,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * IgniteWriter is responsible for Ignite caches recreation and repopulating.
- * Ignite connection (established to an ignite node where the caches need to be restored) needs to be provided.
- * Ignite cache is being recreated and repopulated based on each DTO from the provided list.
+ * IgniteWriter is responsible for Apache Ignite caches recreation and repopulating.
+ * Apache Ignite connection (established to an Apache Ignite node where the caches need to be restored) needs to be provided.
+ * Apache Ignite cache is being recreated and repopulated based on each DTO from the provided list.
  */
 public class IgniteWritersFactoryImpl implements IgniteWritersFactory {
 

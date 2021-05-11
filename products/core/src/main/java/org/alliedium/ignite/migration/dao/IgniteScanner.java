@@ -26,9 +26,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * IgniteScanner is a unit responsible for getting the Ignite meta-data and stored data, processing this data and returning as an ignite specific-free DTO.
- * In terms of Ignite data processing all the Ignite specific links are being removed. Data is being converted to common Java formats for further flexibility.
- * Each separate ignite cache is being converted to DTO elements {@link ICacheData}.
+ * IgniteScanner is a unit responsible for getting the Apache Ignite meta-data and stored data, processing this data and returning as an Apache Ignite specific-free DTO.
+ * In terms of Apache Ignite data processing all the Apache Ignite specific links are being removed. Data is being converted to common Java formats for further flexibility.
+ * Each separate Apache Ignite cache is being converted to DTO elements {@link ICacheData}.
  */
 public class IgniteScanner implements IIgniteReader {
 

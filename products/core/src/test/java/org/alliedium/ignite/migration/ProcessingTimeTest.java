@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The purpose of this test is - gathering execution/processing time of all ignite migration tool.
+ * The purpose of this test is - gathering execution/processing time of all Apache Ignite migration tool.
  * It writes in logs gathered data and also into the csv file: /target/processingResults.csv.
  * The data from csv could be used in office excel or other csv readers in order to build diagrams or
  * other usable stuff which will make more easy/obvious processing time investigation.

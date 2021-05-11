@@ -3,8 +3,8 @@ package org.alliedium.ignite.migration.dao.datamanager;
 import org.alliedium.ignite.migration.dao.converters.IIgniteBinaryDataConverter;
 
 /**
- * Unit is used to be a container for meta-data of separate ignite cache field (field name, value type class name,
- * converter needed to get a common Java representation when the field value is of Ignite specific class).
+ * Unit is used to be a container for meta-data of separate Apache Ignite cache field (field name, value type class name,
+ * converter needed to get a common Java representation when the field value is of Apache Ignite specific class).
  * Storing meta-data needs to be passed in on initialization.
  */
 public class IgniteCacheFieldMeta implements IIgniteCacheFieldMeta {

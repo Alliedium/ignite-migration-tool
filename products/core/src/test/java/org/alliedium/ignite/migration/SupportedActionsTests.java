@@ -52,7 +52,7 @@ public class SupportedActionsTests extends ClientIgniteBaseTest {
     }
 
     /**
-     * This test shows that ignite migration tool works in the same way
+     * This test shows that Apache Ignite migration tool works in the same way
      * with both: in memory caches and persisted caches.
      */
     @Test

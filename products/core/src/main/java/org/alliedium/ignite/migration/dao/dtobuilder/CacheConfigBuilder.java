@@ -7,7 +7,7 @@ import org.apache.ignite.configuration.CacheConfiguration;
 
 /**
  * Unit used for {@link ICacheConfigurationData} creation.
- * Configurations of separate ignite cache and correspondent {@link IIgniteDTOConverter} converter need to be provided on initialization.
+ * Configurations of separate Apache Ignite cache and correspondent {@link IIgniteDTOConverter} converter need to be provided on initialization.
  */
 public class CacheConfigBuilder implements IDTOBuilder<ICacheConfigurationData> {
 
