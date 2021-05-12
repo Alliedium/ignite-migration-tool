@@ -30,8 +30,8 @@ public class SupportedActionsTests extends ClientIgniteBaseTest {
         controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
 
         IgniteCache<Integer, City> cache = clientAPI.getIgnite().cache(cacheName);
-        for(int i = 0; i < 50; i++) {
-            cache.remove(i);
+        for(int cityIndex = 0; cityIndex < 50; cityIndex++) {
+            cache.remove(cityIndex);
         }
         City city = new City("1", "1", 1);
         cache.put(50, city);

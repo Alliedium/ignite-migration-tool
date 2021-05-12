@@ -37,9 +37,9 @@ public class ClientIgniteBaseTest {
     protected <V> List<V> createCacheAndFillWithData(CacheConfiguration<Integer, V> cacheConfiguration, Supplier<V> factory, int count) {
         IgniteCache<Integer, V> cache = ignite.createCache(cacheConfiguration);
         List<V> cacheContent = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
+        for (int itemIndex = 0; itemIndex < 10; itemIndex++) {
             cacheContent.add(factory.get());
-            cache.put(i, cacheContent.get(i));
+            cache.put(itemIndex, cacheContent.get(itemIndex));
         }
 
         return cacheContent;

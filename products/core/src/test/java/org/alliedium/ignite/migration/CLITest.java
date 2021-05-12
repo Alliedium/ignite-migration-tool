@@ -32,7 +32,7 @@ public class CLITest extends ClientIgniteBaseTest {
         List<City> cityList = clientAPI.createTestCityCacheAndInsertData(cacheName, 10);
 
         Map<String, Long> atomicLongs = new HashMap<>();
-        for (int i = 0; i < 10; i++) {
+        for (int count = 0; count < 10; count++) {
             long val = random.nextLong();
             String key = String.valueOf(val);
             atomicLongs.put(key, val);

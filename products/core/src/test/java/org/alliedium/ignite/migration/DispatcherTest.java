@@ -61,7 +61,7 @@ public class DispatcherTest {
 
         new Thread(dispatcher).start();
 
-        for (int i = 0; i < recordsCount; i++) {
+        for (int count = 0; count < recordsCount; count++) {
             dispatcher.publish(data);
         }
 

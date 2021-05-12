@@ -81,7 +81,7 @@ public class AvroSerializerTest {
     }
 
     private void writeTestData(IDataWriter<ICacheData> writer, int recordsCount) {
-        for (int i = 0; i < recordsCount; i++) {
+        for (int count = 0; count < recordsCount; count++) {
             writer.write(TestUtil.createTestCacheData(cacheName));
         }
     }

@@ -91,9 +91,9 @@ public class ClientAPI {
         CacheConfiguration<Integer, City> cacheConfiguration = createTestCityCacheConfiguration(cacheName);
         IgniteCache<Integer, City> igniteCache = ignite.createCache(cacheConfiguration);
         List<City> testCities = new ArrayList<>();
-        for (int i = 0; i < count; i++) {
-            testCities.add(i, new City("test_city" + i, "test_district", random.nextInt()));
-            igniteCache.put(i, testCities.get(i));
+        for (int cityIndex = 0; cityIndex < count; cityIndex++) {
+            testCities.add(cityIndex, new City("test_city" + cityIndex, "test_district", random.nextInt()));
+            igniteCache.put(cityIndex, testCities.get(cityIndex));
         }
 
         return testCities;
@@ -116,8 +116,8 @@ public class ClientAPI {
 
     public <T> void assertIgniteCacheEqualsList(List<T> list, String cacheName){
         IgniteCache<Integer, T> igniteCache = ignite.cache(cacheName);
-        for (int i = 0; i < list.size(); i++) {
-            assertEquals(list.get(i), igniteCache.get(i));
+        for (int itemIndex = 0; itemIndex < list.size(); itemIndex++) {
+            assertEquals(list.get(itemIndex), igniteCache.get(itemIndex));
         }
     }
 

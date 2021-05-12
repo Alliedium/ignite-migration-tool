@@ -8,7 +8,7 @@ public class UtilsTest {
 
     @Test
     public void serializeDeserializeObjects() {
-        for (int i = 0; i < 100_000; i++) {
+        for (int count = 0; count < 100_000; count++) {
             City city = new City("city_name", "test_district", 300);
             String serializedCity = Utils.serializeObjectToXML(city);
             City city1 = Utils.deserializeFromXML(serializedCity);

@@ -49,10 +49,10 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
         IgniteObjectStringConverter converter = new IgniteObjectStringConverter();
         IgniteCacheDataWriter cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
 
-        for (int i = 1; i < 1_000; i++) {
+        for (int cityIndex = 1; cityIndex < 1_000; cityIndex++) {
             ICacheData cacheData = getNextCacheData();
             cacheDataWriter.write(cacheData);
-            Assert.assertNotNull(ignite.cache(cacheName).get(i));
+            Assert.assertNotNull(ignite.cache(cacheName).get(cityIndex));
         }
 
         cacheDataWriter.close();
