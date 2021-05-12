@@ -62,7 +62,7 @@ public class ClientAPI {
         atomicLongs.forEach((name, val) -> ignite.atomicLong(name, val, false).close());
     }
 
-    public void deleteDirectoryRecursively(Path directoryPath) throws IOException {
+    public static void deleteDirectoryRecursively(Path directoryPath) throws IOException {
         if (Files.exists(directoryPath)) {
             Files.walk(directoryPath)
                     .sorted(Comparator.reverseOrder())

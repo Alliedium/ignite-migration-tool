@@ -3,8 +3,8 @@ import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProv
 import org.alliedium.ignite.migration.test.model.City;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.util.*;
 

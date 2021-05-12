@@ -4,8 +4,8 @@ import org.alliedium.ignite.migration.test.ClientAPI;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -21,7 +21,7 @@ public class ClientIgniteBaseTest {
     protected static Random random;
 
     @BeforeClass
-    public static void beforeClass() {
+    public void beforeClass() {
         clientAPI = ClientAPI.loadClientIgnite(IgniteConfigLoader.load("client"));
         avroMainPath = clientAPI.getAvroMainPath();
         avroTestSet = clientAPI.getAvroTestSetPath();
@@ -29,7 +29,7 @@ public class ClientIgniteBaseTest {
         random = clientAPI.getRandom();
     }
 
-    @Before
+    @BeforeMethod
     public void before() throws IOException {
         clientAPI.cleanIgniteAndRemoveDirectories();
     }

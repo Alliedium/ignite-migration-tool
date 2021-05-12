@@ -1,7 +1,5 @@
 package org.alliedium.ignite.migration;
 
-import static org.junit.Assert.assertTrue;
-
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.serializer.AvroFileReader;
 import org.alliedium.ignite.migration.serializer.utils.AvroFileExtensions;
@@ -25,7 +23,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.ignite.IgniteAtomicLong;
 import org.apache.ignite.IgniteCache;
-import org.junit.*;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class AvroFileManagerTest extends ClientIgniteBaseTest {
 
@@ -110,18 +109,16 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         clientAPI.closeAtomicLongs(atomicLongDataMap);
     }
 
-    @Test
+    @Test(
+            expectedExceptions = Exception.class,
+            expectedExceptionsMessageRegExp = ".*ignite migration tool does not work without ignite cache query entities.*")
     public void migrationToolDoesNotWorkWithoutQueryEntitiesTest() {
         String cacheName = "migrationToolDoesNotWorkWithoutQueryEntitiesTest";
         IgniteCache<Integer, City> igniteCache = ignite.createCache(cacheName);
         igniteCache.put(0, new City("test_city", "test_district", random.nextInt()));
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
-        Action action = () -> controller.serializeDataToAvro(avroTestSet);
-        BadPathAsserter badPathAsserter = new BadPathAsserter(action);
-        badPathAsserter.assertExceptionThrownAndMessageContains(
-                "ignite migration tool does not work without ignite cache query entities");
-        badPathAsserter.invokeActionApplyAssertions();
+        controller.serializeDataToAvro(avroTestSet);
     }
 
     public void processDataSetAndCompareWithInitial() throws IOException {
@@ -133,7 +130,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         List<Path> resultingDataSetSubDirList = Utils.getSubdirectoryPathsFromDirectory(avroMainPath);
 
         boolean subDirectoriesAmountMatches = (initialDataSetSubDirList.size() == resultingDataSetSubDirList.size());
-        assertTrue(subDirectoriesAmountMatches);
+        Assert.assertTrue(subDirectoriesAmountMatches);
 
         boolean areEqual = true;
         for (Path subdirectoryPath : initialDataSetSubDirList) {
@@ -164,7 +161,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
             }
         }
 
-        assertTrue(areEqual);
+        Assert.assertTrue(areEqual);
     }
 
     private void readSqlResourceIntoIgnite(byte[] sqlFileContent) throws SQLException {

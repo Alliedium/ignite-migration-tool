@@ -15,10 +15,10 @@ import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -28,13 +28,13 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
 
     private Controller controller;
 
-    @Before
+    @BeforeMethod
     public void supportedActionsQueryEntityBefore() throws IOException {
         controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
         clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
     }
 
-    @After
+    @AfterMethod
     public void supportedActionsQueryEntityAfter() throws IOException {
         clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
     }
@@ -46,7 +46,9 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
      * This is so cause ignite migration tool highly relies on fields types to properly serialize and
      * deserialize data.
      */
-    @Test
+    @Test(
+            expectedExceptions = Exception.class,
+            expectedExceptionsMessageRegExp = ".*Query entity for field \\[value\\] was not found.*")
     public void partialQueryEntitiesTest() {
         String cacheName = "partialQueryEntitiesTest";
         QueryEntity queryEntity = new QueryEntity()
@@ -62,10 +64,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialField("testName", "testType", "testVal"), 10);
 
-        Action action = () -> controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
-        BadPathAsserter asserter = new BadPathAsserter(action);
-        asserter.assertExceptionThrownAndMessageContains("Query entity for field [value] was not found");
-        asserter.invokeActionApplyAssertions();
+        controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
     }
 
     /**
@@ -169,7 +168,9 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
      * {@link org.apache.ignite.binary.Binarylizable#readBinary} and {@link org.apache.ignite.binary.Binarylizable#writeBinary}
      * do not have query entities.
      */
-    @Test
+    @Test(
+            expectedExceptions = Exception.class,
+            expectedExceptionsMessageRegExp = ".*Query entity for field \\[specialValue\\] was not found.*")
     public void partialBinarylizableTestBadPath() {
         String cacheName = "partialBinarylizableTestBadPath";
         QueryEntity queryEntity = new QueryEntity()
@@ -185,10 +186,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialFieldBinarylizable("testName", "testType", "testVal", "testConsumer"), 10);
 
-        Action action = () -> controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
-        BadPathAsserter asserter = new BadPathAsserter(action);
-        asserter.assertExceptionThrownAndMessageContains("Query entity for field [specialValue] was not found");
-        asserter.invokeActionApplyAssertions();
+        controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
     }
 
     private QueryEntity createStandardQueryEntity() {

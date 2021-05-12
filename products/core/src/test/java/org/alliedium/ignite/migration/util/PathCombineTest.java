@@ -1,7 +1,7 @@
 package org.alliedium.ignite.migration.util;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,7 +15,7 @@ public class PathCombineTest {
         Assert.assertTrue(pathCombine.plus("test/resources").getPath().toString().contains("src/test/resources"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expectedExceptions = NullPointerException.class)
     public void testPathCombineDontAcceptsNull() {
         new PathCombine(null);
     }

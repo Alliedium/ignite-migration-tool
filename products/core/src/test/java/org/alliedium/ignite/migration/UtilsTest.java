@@ -1,8 +1,8 @@
 package org.alliedium.ignite.migration;
 
 import org.alliedium.ignite.migration.test.model.City;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class UtilsTest {
 

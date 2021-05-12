@@ -16,39 +16,45 @@ import org.alliedium.ignite.migration.test.model.City;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import javax.cache.Cache;
 
 public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
     private final String cacheName = "test_cache";
-    private final IIgniteDTOConverter<String, Object> cacheKeyConverter = new IgniteObjectStringConverter();
     private ICacheEntryValue cacheValueDTO;
+    private IgniteObjectStringConverter converter;
+    private IgniteCacheDataWriter cacheDataWriter;
+
+    @BeforeMethod
+    public void beforeIgniteCacheDataWriterTestMethod() {
+        ignite.destroyCache(cacheName);
+        CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
+        ignite.createCache(configuration);
+        converter = new IgniteObjectStringConverter();
+        cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
+    }
+
+    @AfterMethod
+    public void afterIgniteCacheDataWriterTestMethod() {
+        ignite.destroyCache(cacheName);
+    }
 
     @Test
     public void write() {
-        CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
-        ignite.createCache(configuration);
-
         ICacheData cacheData = getNextCacheData();
-
-        IgniteObjectStringConverter converter = new IgniteObjectStringConverter();
-        IgniteCacheDataWriter cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
 
         cacheDataWriter.write(cacheData);
 
-        Assert.assertNotNull(ignite.cache(cacheName).get(1));
+        Assert.assertTrue(ignite.cache(cacheName).size() > 0);
     }
 
     @Test
     public void testMultipleWrite() {
-        CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
-        ignite.createCache(configuration);
-        IgniteObjectStringConverter converter = new IgniteObjectStringConverter();
-        IgniteCacheDataWriter cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
-
         for (int cityIndex = 1; cityIndex < 1_000; cityIndex++) {
             ICacheData cacheData = getNextCacheData();
             cacheDataWriter.write(cacheData);
@@ -76,7 +82,7 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
             }
         }
 
-        ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(ignite.cache(cacheName).size(), cacheKeyConverter).build();
+        ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(ignite.cache(cacheName).size(), converter).build();
 
         return new CacheData(cacheName, cacheKeyDTO, cacheValueDTO);
     }

@@ -15,7 +15,7 @@
         <buildDirectory>${project.basedir}/target</buildDirectory>
         <repoDirectory>repo</repoDirectory>
 
-        <junit.version>2.22.2</junit.version>
+        <surefire.version>3.0.0-M5</surefire.version>
         <ignite.version>2.10.0</ignite.version>
         <project.version>1.0.0</project.version>
     </properties>
@@ -43,9 +43,9 @@
                 <version>${ignite.version}</version>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.13.2</version>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>7.4.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

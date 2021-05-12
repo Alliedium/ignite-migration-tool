@@ -3,14 +3,11 @@ package org.alliedium.ignite.migration.test.model;
 import org.alliedium.ignite.migration.ClientIgniteBaseTest;
 import org.alliedium.ignite.migration.Controller;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
