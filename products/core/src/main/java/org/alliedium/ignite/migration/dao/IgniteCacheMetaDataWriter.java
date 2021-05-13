@@ -16,7 +16,7 @@ public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> 
 
     @Override
     public void write(ICacheMetaData data) {
-        String recreatingCacheName = data.getName();
+        String recreatingCacheName = data.getCacheName();
         if (cacheNeedsToBeRestored(recreatingCacheName) && ignite.cacheNames().contains(recreatingCacheName)) {
             logger.info("Skipping cache recreation for already existing one: " + recreatingCacheName);
         } else {
@@ -32,7 +32,7 @@ public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> 
 
         recreatingCacheConfiguration.setQueryEntities(recreatingCacheQueryEntities);
 
-        logger.info("Creating ignite cache: " + cacheMetaData.getName());
+        logger.info("Creating ignite cache: " + cacheMetaData.getCacheName());
         ignite.getOrCreateCache(recreatingCacheConfiguration);
         logger.info("Cache created successfully");
     }

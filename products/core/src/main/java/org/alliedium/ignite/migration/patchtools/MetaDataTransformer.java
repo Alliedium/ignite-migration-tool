@@ -15,6 +15,7 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
 
@@ -27,20 +28,41 @@ public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
 
     @Override
     public MetaDataTransformer addFieldType(String name, Class<?> clazz) {
-        // todo: add check for class, because not all classes are supported
-        CacheConfiguration<Object, BinaryObject> cacheConfiguration =
-                (CacheConfiguration<Object, BinaryObject>) converter.convertFromDto(cacheMetaData.getConfiguration().toString());
-        String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
-        Collection<QueryEntity> queryEntities = (Collection<QueryEntity>) converter.convertFromDto(cacheEntryMeta);
-
-        for (QueryEntity queryEntity : queryEntities) {
+        return modifyMetaData(queryEntity -> {
             LinkedHashMap<String, String> fields = queryEntity.getFields();
             fields.put(name, clazz.getName());
             queryEntity.setFields(fields);
             Map<String, String> aliases = queryEntity.getAliases();
             aliases.put(name, name.toUpperCase());
             queryEntity.setAliases(aliases);
-        }
+        });
+    }
+
+    @Override
+    public MetaDataTransformer removeFieldType(String name) {
+        return modifyMetaData(queryEntity -> {
+            LinkedHashMap<String, String> fields = queryEntity.getFields();
+            fields.remove(name);
+            queryEntity.setFields(fields);
+            Map<String, String> aliases = queryEntity.getAliases();
+            aliases.remove(name);
+            queryEntity.setAliases(aliases);
+        });
+    }
+
+    @Override
+    public ICacheMetaData build() {
+        return cacheMetaData;
+    }
+
+    private MetaDataTransformer modifyMetaData(Consumer<QueryEntity> queryEntityModifier) {
+        // todo: add check for class, because not all classes are supported
+        CacheConfiguration<Object, BinaryObject> cacheConfiguration =
+                (CacheConfiguration<Object, BinaryObject>) converter.convertFromDto(cacheMetaData.getConfiguration().toString());
+        String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
+        Collection<QueryEntity> queryEntities = (Collection<QueryEntity>) converter.convertFromDto(cacheEntryMeta);
+
+        queryEntities.forEach(queryEntityModifier);
 
         cacheConfiguration.setQueryEntities(queryEntities);
 
@@ -48,12 +70,7 @@ public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
         IDTOBuilder<ICacheEntryMetaData> cacheEntryMetaBuilder = new EntryMetaBuilder(queryEntities, converter);
         IDTOBuilder<ICacheConfigurationData> cacheConfigurationBuilder = new CacheConfigBuilder(cacheConfiguration, converter);
 
-        return new MetaDataTransformer(new CacheMetaData(cacheMetaData.getName(), cacheConfigurationBuilder.build(),
+        return new MetaDataTransformer(new CacheMetaData(cacheMetaData.getCacheName(), cacheConfigurationBuilder.build(),
                 cacheEntryMetaBuilder.build()));
-    }
-
-    @Override
-    public ICacheMetaData build() {
-        return cacheMetaData;
     }
 }

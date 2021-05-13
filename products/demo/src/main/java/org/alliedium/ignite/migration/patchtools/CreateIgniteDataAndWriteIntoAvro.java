@@ -10,8 +10,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class CreateIgniteDataAndWriteIntoAvro {
-    private static final String cacheName = "testCache";
-
     public static void main(String[] args) throws IOException {
         ClientAPI clientAPI = ClientAPI.loadClientIgnite(IgniteConfigLoader.load("client"));
         Path pathToSerialize = clientAPI.getAvroTestSetPath();
@@ -22,7 +20,9 @@ public class CreateIgniteDataAndWriteIntoAvro {
         clientAPI.cleanIgniteAndRemoveDirectories();
         clientAPI.deleteDirectoryRecursively(pathToSerialize);
         clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
-        clientAPI.createTestCityCacheAndInsertData(cacheName, 100);
+        clientAPI.createTestCityCacheAndInsertData(CacheNames.FIRST, 100);
+        clientAPI.createTestCityCacheAndInsertData(CacheNames.SECOND, 100);
+        clientAPI.createTestCityCacheAndInsertData(CacheNames.THIRD, 100);
 
         Controller controller = new Controller(clientAPI.getIgnite(), IgniteAtomicLongNamesProvider.EMPTY);
         controller.serializeDataToAvro(pathToSerialize);
