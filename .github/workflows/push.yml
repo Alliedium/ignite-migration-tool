@@ -1,0 +1,22 @@
+name: docker-compose-actions-workflow
+on:
+  # Triggers the workflow on push or pull request events
+  push:
+  pull_request:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: IgniteMigrationToolTests
+        run: docker-compose --compatibility -f ./products/docker-compose.yml up
+          --force-recreate --abort-on-container-exit --exit-code-from tests_ignitemigrationtool --no-color
+      - name: Publish Test Report
+        if: ${{ always() }}
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: show-test-results
+          report_paths: ./products/core/tests-ignitemigrationtool/surefire-reports/TEST-TestSuite.xml
