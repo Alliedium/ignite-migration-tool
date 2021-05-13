@@ -10,7 +10,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Provides an async implementation of IDispatcher, distributes messages between subscribers and publishers,
@@ -57,7 +56,7 @@ public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
 
     @Override
     public void run() {
-        AtomicInteger count = new AtomicInteger();
+        int count = 0;
         long lastProgressShownNanoTime = 0;
         long showProgressInterval = TimeUnit.SECONDS.toNanos(1);
         try {
@@ -67,12 +66,12 @@ public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
                     consumers.forEach(consumer -> consumer.write(element));
                     // prints something in order to indicate progress
                     long currentNanoTime = System.nanoTime();
-                    count.incrementAndGet();
+                    count++;
                     if (currentNanoTime - lastProgressShownNanoTime >= showProgressInterval) {
                         lastProgressShownNanoTime = currentNanoTime;
                         System.out.printf(
-                                "[PROGRESS INDICATOR] Records processed for the past 1 second: %d\n", count.get());
-                        count.set(0);
+                                "[PROGRESS INDICATOR] Records processed for the past 1 second: %d\n", count);
+                        count = 0;
                     }
                 }
             }

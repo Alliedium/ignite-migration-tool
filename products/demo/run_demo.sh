@@ -31,9 +31,10 @@ executeStep org.alliedium.ignite.migration.patchtools.CreateIgniteDataAndWriteIn
 #
 docker-compose down
 
-# apply a simple transformation (adding a new field to every cache) to Avro files
+# apply a simple transformation
+# (adding a new field to first cache, removing another field from second cache) to Avro files
 #
-executeStep org.alliedium.ignite.migration.patches.AlterCacheAddFieldPatch ./avro_original ./avro_transformed
+executeStep org.alliedium.ignite.migration.patches.AlterCachesDemoPatch ./avro_original ./avro_transformed
 
 # start a new Apache Ignite cluster
 #
@@ -41,7 +42,7 @@ docker-compose up -d --build ignite igniteactivator
 
 # upload the transformed Avro files to the cluster
 #
-executeStep org.alliedium.ignite.migration.patchtools.LoadDataFromAvroAndCheckFieldAdded ./avro_transformed
+executeStep org.alliedium.ignite.migration.patchtools.LoadDataFromAvroAndCheckPatchApplied ./avro_transformed
 
 # shutdown the cluster
 #

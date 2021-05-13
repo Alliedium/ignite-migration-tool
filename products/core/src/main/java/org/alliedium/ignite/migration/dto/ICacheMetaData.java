@@ -6,7 +6,7 @@ package org.alliedium.ignite.migration.dto;
  * or meta-data serializing to an external format.
  */
 public interface ICacheMetaData {
-    String getName();
+    String getCacheName();
 
     ICacheConfigurationData getConfiguration();
 

@@ -46,7 +46,7 @@ public class AvroSerializer implements ISerializer {
     @Override
     public IDataWriter<ICacheMetaData> getCacheMetaDataSerializer() {
         return cacheMetaData -> {
-            String cacheName = cacheMetaData.getName();
+            String cacheName = cacheMetaData.getCacheName();
             PathCombine cacheRelatedPath = rootSerializedDataPath.plus(cacheName);
             logger.info("Starting " + cacheName + " cache serialization to avro");
 
