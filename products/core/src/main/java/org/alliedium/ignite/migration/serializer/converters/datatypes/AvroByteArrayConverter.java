@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.serializer.converters.datatypes;
 
+import java.nio.ByteBuffer;
 import java.util.Base64;
 import org.apache.avro.util.Utf8;
 
@@ -9,16 +10,16 @@ import org.apache.avro.util.Utf8;
  * Fields with converted byte-array value are also being correspondingly marked in avro schema.
  *
  */
-public class AvroByteArrayConverter implements IAvroDerivedTypeConverter { //TODO: get rid of current converter. Byte arrays need to be serialized to avro using native avro functionalities.
+public class AvroByteArrayConverter implements IAvroDerivedTypeConverter {
 
-    public String convertForAvro(Object fieldData) {
+    public ByteBuffer convertForAvro(Object fieldData) {
         assert fieldData instanceof byte[];
-        return Base64.getEncoder().encodeToString((byte[]) fieldData);
+        return ByteBuffer.wrap((byte[]) fieldData);
     }
 
     public byte[] convertFromAvro(Object fieldData) {
-        assert (fieldData instanceof String) || (fieldData instanceof Utf8);
-        return Base64.getDecoder().decode(fieldData.toString());
+        assert fieldData instanceof ByteBuffer;
+        return ((ByteBuffer) fieldData).array();
     }
 
 }

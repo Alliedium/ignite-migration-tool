@@ -3,6 +3,7 @@ package org.alliedium.ignite.migration.test.model;
 import org.alliedium.ignite.migration.ClientIgniteBaseTest;
 import org.alliedium.ignite.migration.Controller;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
+import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.testng.annotations.Test;
@@ -28,6 +29,12 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
 
         List<NoNameModel> noNameModels = createCacheAndFillWithData(cacheConfiguration,
                 () -> new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())), 10);
+
+        IgniteCache<Integer, NoNameModel> igniteCache = ignite.cache(cacheName);
+        noNameModels.add(new NoNameModel(null, new Timestamp(System.currentTimeMillis())));
+        igniteCache.put(10, noNameModels.get(10));
+        noNameModels.add(new NoNameModel(null, null));
+        igniteCache.put(11, noNameModels.get(11));
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
         controller.serializeDataToAvro(avroTestSet);
