@@ -21,8 +21,8 @@ import java.util.Map;
 import org.apache.ignite.Ignite;
 
 /**
- * Controller is a unit responsible for CLI general commands processing: data serialization (from ignite to avro) and deserialization (from avro to ignite).
- * It requires an ignite connection to be passed in on the initialization stage.
+ * Controller is a unit responsible for CLI general commands processing: data serialization (from Apache Ignite to avro) and deserialization (from avro to ignite).
+ * It requires an Apache Ignite connection to be passed in on the initialization stage.
  * Controller is used to be a linker between two general application modules: DAO and Serializer.
  *
  * @see ISerializer
@@ -47,6 +47,10 @@ public class Controller {
         this.dispatcherFactory = new DispatcherFactory(propertiesResolver);
     }
 
+    /**
+     * Represents serialize operation for Apache Ignite data
+     * @param rootSerializedDataPath - path to which Apache Ignite cluster data will be serialized
+     */
     public void serializeDataToAvro(Path rootSerializedDataPath) {
         ISerializer avroSerializer = new AvroSerializer(rootSerializedDataPath);
         Dispatcher<ICacheMetaData> cacheMetaDataDispatcher = dispatcherFactory.newDispatcher();
@@ -66,6 +70,19 @@ public class Controller {
         tasksExecutor.shutdown();
     }
 
+    /**
+     * Represents a deserialize operation of avro file right into Apache Ignite.
+     * In case a cache exists both in Apache Ignite and in provided avro files,
+     * the Deserialize operation will deserialize and override values by keys, no other objects would be touched.
+     * For example if a cache contains the following data:
+     *      [first : firstObj, second : secondObj]
+     * And serialized data contains the following data:
+     *      [first : thirdObj]
+     * The result of deserialize operation will be the following:
+     *      [first : thirdObj, second : secondObj]
+     *
+     * @param avroFilesPath - path to avro files which contain serialized data.
+     */
     public void deserializeDataFromAvro(Path avroFilesPath) {
         IAvroDeserializer avroDeserializer = new AvroDeserializer(avroFilesPath);
 

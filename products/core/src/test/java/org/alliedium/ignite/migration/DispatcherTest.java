@@ -1,15 +1,15 @@
 package org.alliedium.ignite.migration;
 
-import org.junit.Assert;
-import org.junit.Test;
 import org.mockito.Mockito;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.alliedium.ignite.migration.MockitoUtil.doAnswerVoid;
-import static org.junit.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class DispatcherTest {
 
@@ -42,8 +42,8 @@ public class DispatcherTest {
         }
         dispatcher.finish();
 
-        assertTrue(latch.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
-        assertTrue(latchResourceClose.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Assert.assertTrue(latch.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
+        Assert.assertTrue(latchResourceClose.await(LATCH_TIMEOUT_SECONDS, TimeUnit.SECONDS));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class DispatcherTest {
         int recordsCount = 1_000_000;
         CountDownLatch latch = new CountDownLatch(recordsCount);
         IDataWriter<String> consumer = text -> {
-            Assert.assertEquals(data, text);
+            assertEquals(data, text);
             latch.countDown();
         };
 
@@ -61,11 +61,11 @@ public class DispatcherTest {
 
         new Thread(dispatcher).start();
 
-        for (int i = 0; i < recordsCount; i++) {
+        for (int count = 0; count < recordsCount; count++) {
             dispatcher.publish(data);
         }
 
-        assertTrue(latch.await(30, TimeUnit.SECONDS));
+        Assert.assertTrue(latch.await(30, TimeUnit.SECONDS));
         dispatcher.finish();
     }
 }

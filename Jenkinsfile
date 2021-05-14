@@ -9,7 +9,7 @@ def convertProjectName(String projectName) {
     return projectName.replace(" ", "_").replace("/", "_").toLowerCase()
 }
 
-def PROJECT_NAME = env.BRANCH_NAME ? convertProjectName(env.JOB_NAME + "_" + env.BRANCH_NAME) : convertProjectName(env.JOB_NAME)
+def PROJECT_NAME = convertProjectName(env.JOB_NAME)
 
 boolean isAfterTestsToBeRun = false
 

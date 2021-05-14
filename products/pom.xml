@@ -15,7 +15,7 @@
         <buildDirectory>${project.basedir}/target</buildDirectory>
         <repoDirectory>repo</repoDirectory>
 
-        <junit.version>2.22.2</junit.version>
+        <surefire.version>3.0.0-M5</surefire.version>
         <ignite.version>2.10.0</ignite.version>
         <project.version>1.0.0</project.version>
     </properties>
@@ -43,25 +43,15 @@
                 <version>${ignite.version}</version>
             </dependency>
             <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.12</version>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>7.4.0</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>2.6</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.gson</groupId>
-                <artifactId>gson</artifactId>
-                <version>2.8.5</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.ignite</groupId>
-                <artifactId>ignite-kubernetes</artifactId>
-                <version>${ignite.version}</version>
+                <version>2.8.0</version>
             </dependency>
             <dependency>
                 <groupId>commons-cli</groupId>
@@ -86,7 +76,7 @@
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
                 <artifactId>xstream</artifactId>
-                <version>1.4.11.1</version>
+                <version>1.4.16</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

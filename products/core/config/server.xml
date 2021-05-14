@@ -33,6 +33,14 @@
                         <property name="persistenceEnabled" value="true"/>
                     </bean>
                 </property>
+                <property name="dataRegionConfigurations">
+                    <list>
+                        <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                            <property name="name" value="InMemory"/>
+                            <property name="persistenceEnabled" value="false"/>
+                        </bean>
+                    </list>
+                </property>
             </bean>
         </property>
 

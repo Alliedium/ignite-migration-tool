@@ -8,7 +8,7 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Test;
+import org.testng.annotations.Test;
 import org.mockito.Mockito;
 
 import java.util.Collection;

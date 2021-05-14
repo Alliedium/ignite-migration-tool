@@ -6,7 +6,7 @@ import java.nio.file.Paths;
 import org.apache.ignite.Ignition;
 
 /**
- * Current class is used by {@link IgniteConfigLoader} for reading the ignite configurations represented as XML in file.
+ * Current class is used by {@link IgniteConfigLoader} for reading the Apache Ignite configurations represented as XML in file.
  * File location is defined by 'IGNITE_CONFIG_HOME' environment variable.
  */
 class XMLConfig {

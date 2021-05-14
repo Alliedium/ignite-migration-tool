@@ -8,7 +8,7 @@ import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
 /**
- * Provides an access to particular ignite cache data and configurations.
+ * Provides an access to particular Apache Ignite cache data and configurations.
  */
 public interface IIgniteCacheDAO {
 

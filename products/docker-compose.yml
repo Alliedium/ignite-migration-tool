@@ -7,12 +7,6 @@ services:
         deploy:
           mode: replicated
           replicas: 1
-        ports:
-          - 11211:11211
-          - 47100:47100
-          - 47500:47500
-          - 49112:49112
-          - 10800:10800
 
     igniteactivator:
         build:

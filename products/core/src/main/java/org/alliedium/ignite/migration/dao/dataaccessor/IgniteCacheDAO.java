@@ -11,8 +11,8 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import javax.cache.Cache;
 
 /**
- * Provides an access to particular ignite cache data and configurations.
- * Unit needs to be provided with an ignite connection and required cache name on on initialization.
+ * Provides an access to particular Apache Ignite cache data and configurations.
+ * Unit needs to be provided with an Apache Ignite connection and required cache name on on initialization.
  */
 public class IgniteCacheDAO implements IIgniteCacheDAO {
 

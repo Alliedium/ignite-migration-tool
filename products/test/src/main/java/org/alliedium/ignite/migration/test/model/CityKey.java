@@ -4,7 +4,7 @@ import org.apache.ignite.cache.affinity.AffinityKeyMapped;
 
 /**
  * City key class to properly work with city objects using key-value and compute APIs.
- * No need to implement hashCode or equals. Ignite does this internally on top of the serialized data (BinaryObject).
+ * No need to implement hashCode or equals. Apache Ignite does this internally on top of the serialized data (BinaryObject).
  */
 public class CityKey {
     /** */

@@ -6,11 +6,9 @@ import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProv
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
-import org.junit.Assert;
-import org.junit.Test;
+import org.testng.annotations.Test;
 
 import java.sql.Timestamp;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,12 +27,14 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        IgniteCache<Integer, NoNameModel> igniteCache = ignite.createCache(cacheConfiguration);
-        List<NoNameModel> noNameModels = new ArrayList<>();
-        for (int i = 0; i < 10; i++) {
-            noNameModels.add(i, new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())));
-            igniteCache.put(i, noNameModels.get(i));
-        }
+        List<NoNameModel> noNameModels = createCacheAndFillWithData(cacheConfiguration,
+                () -> new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())), 10);
+
+        IgniteCache<Integer, NoNameModel> igniteCache = ignite.cache(cacheName);
+        noNameModels.add(new NoNameModel(null, new Timestamp(System.currentTimeMillis())));
+        igniteCache.put(10, noNameModels.get(10));
+        noNameModels.add(new NoNameModel(null, null));
+        igniteCache.put(11, noNameModels.get(11));
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
         controller.serializeDataToAvro(avroTestSet);
@@ -43,9 +43,6 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
 
         controller.deserializeDataFromAvro(avroTestSet);
 
-        igniteCache = ignite.cache(cacheName);
-        for (int i = 0; i < noNameModels.size(); i++) {
-            Assert.assertEquals(noNameModels.get(i), igniteCache.get(i));
-        }
+        clientAPI.assertIgniteCacheEqualsList(noNameModels, cacheName);
     }
 }

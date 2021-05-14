@@ -1,7 +1,5 @@
 package org.alliedium.ignite.migration;
 
-import static org.junit.Assert.assertTrue;
-
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.serializer.AvroFileReader;
 import org.alliedium.ignite.migration.serializer.utils.AvroFileExtensions;
@@ -25,7 +23,8 @@ import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.ignite.IgniteAtomicLong;
 import org.apache.ignite.IgniteCache;
-import org.junit.*;
+import org.testng.Assert;
+import org.testng.annotations.Test;
 
 public class AvroFileManagerTest extends ClientIgniteBaseTest {
 
@@ -103,31 +102,23 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         // # ignite test data check
         clientAPI.assertAtomicLongs(atomicLongDataMap);
 
-        IgniteCache<Integer, City> cityIgniteCache = ignite.cache(cacheNames.get(0));
-        for (int i = 0; i < testCities.size(); i++) {
-            Assert.assertEquals(testCities.get(i), cityIgniteCache.get(i));
-        }
+        clientAPI.assertIgniteCacheEqualsList(testCities, cacheNames.get(0));
 
         Assert.assertNotNull(ignite.cache(cacheNames.get(1)));
 
         clientAPI.closeAtomicLongs(atomicLongDataMap);
     }
 
-    @Test
+    @Test(
+            expectedExceptions = Exception.class,
+            expectedExceptionsMessageRegExp = ".*ignite migration tool does not work without ignite cache query entities.*")
     public void migrationToolDoesNotWorkWithoutQueryEntitiesTest() {
         String cacheName = "migrationToolDoesNotWorkWithoutQueryEntitiesTest";
         IgniteCache<Integer, City> igniteCache = ignite.createCache(cacheName);
         igniteCache.put(0, new City("test_city", "test_district", random.nextInt()));
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
-        try {
-            controller.serializeDataToAvro(avroTestSet);
-        } catch(Exception e) {
-            assertTrue(e.getMessage().contains("ignite migration tool does not work without ignite cache query entities"));
-            return;
-        }
-
-        Assert.fail("This is bad path test and it did not fail");
+        controller.serializeDataToAvro(avroTestSet);
     }
 
     public void processDataSetAndCompareWithInitial() throws IOException {
@@ -139,7 +130,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         List<Path> resultingDataSetSubDirList = Utils.getSubdirectoryPathsFromDirectory(avroMainPath);
 
         boolean subDirectoriesAmountMatches = (initialDataSetSubDirList.size() == resultingDataSetSubDirList.size());
-        assertTrue(subDirectoriesAmountMatches);
+        Assert.assertTrue(subDirectoriesAmountMatches);
 
         boolean areEqual = true;
         for (Path subdirectoryPath : initialDataSetSubDirList) {
@@ -170,7 +161,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
             }
         }
 
-        assertTrue(areEqual);
+        Assert.assertTrue(areEqual);
     }
 
     private void readSqlResourceIntoIgnite(byte[] sqlFileContent) throws SQLException {

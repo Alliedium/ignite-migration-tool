@@ -9,7 +9,7 @@ import org.apache.ignite.cache.QueryEntity;
 
 /**
  * Unit used for {@link ICacheEntryMetaData} creation.
- * Query entities of an ignite cache {@link org.apache.ignite.IgniteCache#getConfiguration(Class)#igniteCacheQueryEntities} and
+ * Query entities of an Apache Ignite cache {@link org.apache.ignite.IgniteCache#getConfiguration(Class)#igniteCacheQueryEntities} and
  * correspondent realization of {@link IIgniteDTOConverter} converter need to be provided on initialization.
  */
 public class EntryMetaBuilder implements IDTOBuilder<ICacheEntryMetaData> {

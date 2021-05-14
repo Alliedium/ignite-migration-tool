@@ -3,7 +3,7 @@ package org.alliedium.ignite.migration;
 import org.apache.ignite.configuration.IgniteConfiguration;
 
 /**
- * Current class is responsible for getting the Ignite configuration details from the provided file.
+ * Current class is responsible for getting the Apache Ignite configuration details from the provided file.
  * Configuration file location is defined by 'IGNITE_CONFIG_HOME' environment variable.
  * Configurations are being checked to be not null, processed by {@link XMLConfig} class and then returned by current class as a correspondent object of IgniteConfiguration class.
  */

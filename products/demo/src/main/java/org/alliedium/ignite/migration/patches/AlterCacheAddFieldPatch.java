@@ -6,6 +6,7 @@ import org.alliedium.ignite.migration.patchtools.MetaDataTransformer;
 import org.alliedium.ignite.migration.patchtools.PatchProcessor;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
+import org.alliedium.ignite.migration.test.TestDirectories;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,17 +29,21 @@ public class AlterCacheAddFieldPatch implements IPatch {
                 .addField(fieldName, random.nextInt()).build();
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        // resolve source and destination folders
+        TestDirectories testDirectories = new TestDirectories();
+        Path sourcePath = testDirectories.getAvroTestSetPath();
+        Path destinationPath = testDirectories.getAvroMainPath();
+        if (args.length > 1) {
+            sourcePath = Paths.get(args[0]);
+            destinationPath = Paths.get(args[1]);
+        }
+
         // create an instance of patch
         IPatch patch = new AlterCacheAddFieldPatch();
 
-        // provide patch for patch processor
-        PatchProcessor processor = new PatchProcessor(patch);
-        if (args.length > 1) {
-            Path sourcePath = Paths.get(args[0]);
-            Path destinationPath = Paths.get(args[1]);
-            processor = new PatchProcessor(sourcePath, destinationPath, patch);
-        }
+        // provide source. destination and patch to patch processor
+        PatchProcessor processor = new PatchProcessor(sourcePath, destinationPath, patch);
 
         // start processor
         processor.process();

@@ -13,11 +13,11 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
  * the affected field in avro schema.
  * Avro schema base is being built within {@link IAvroSchemaBuilder} and needs to be provided as an argument.
  */
-class ByteArrayAvroSchemaFieldAssembler implements
-    IAvroSchemaFieldAssembler { //TODO: byte-array values need to be serialized via native avro mechanisms, once it is done - current assembler needs to either be deleted or updated
+class ByteArrayAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
 
     public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName) {
-        fieldAssembler.name(fieldName).doc(TypesResolver.getTypeByteArray()).type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
+        fieldAssembler.name(fieldName)
+                .doc(TypesResolver.getTypeByteArray())
+                .type(SchemaBuilder.unionOf().bytesType().and().nullType().endUnion()).noDefault();
     }
-
 }

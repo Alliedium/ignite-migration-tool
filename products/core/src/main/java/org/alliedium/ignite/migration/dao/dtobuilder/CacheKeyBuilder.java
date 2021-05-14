@@ -7,7 +7,7 @@ import org.apache.ignite.binary.BinaryObject;
 
 /**
  * Unit used for {@link ICacheEntryKey} creation.
- * Ignite cache entry key and correspondent realization of {@link IIgniteDTOConverter} converter need to be provided on initialization.
+ * Apache Ignite cache entry key and correspondent realization of {@link IIgniteDTOConverter} converter need to be provided on initialization.
  */
 public class CacheKeyBuilder implements IDTOBuilder<ICacheEntryKey> {
 

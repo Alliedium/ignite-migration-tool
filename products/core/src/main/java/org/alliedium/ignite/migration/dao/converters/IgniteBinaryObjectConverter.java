@@ -15,11 +15,11 @@ import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.binary.BinaryObjectBuilder;
 
 /**
- * Unit executes conversion from an ignite {@link BinaryObject} to {@link ICacheEntryValue} and vice-versa.
+ * Unit executes conversion from an Apache Ignite {@link BinaryObject} to {@link ICacheEntryValue} and vice-versa.
  * When converting from {@link BinaryObject}, unit needs to be provided with meta information for each BinaryObject field
  * (as a list of {@link IIgniteCacheFieldMeta}) on initialization.
- * When converting from {@link ICacheEntryValue}, unit needs to be provided with correspondent ignite connection
- * and value type of an ignite cache, which BinaryObject is being built for.
+ * When converting from {@link ICacheEntryValue}, unit needs to be provided with correspondent Apache Ignite connection
+ * and value type of an Apache Ignite cache, which BinaryObject is being built for.
  */
 public class IgniteBinaryObjectConverter implements IIgniteDTOConverter<ICacheEntryValue, BinaryObject> {
 

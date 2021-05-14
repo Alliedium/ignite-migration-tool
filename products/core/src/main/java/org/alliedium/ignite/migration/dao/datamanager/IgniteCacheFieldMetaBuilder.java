@@ -13,9 +13,9 @@ import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.internal.binary.BinaryEnumObjectImpl;
 
 /**
- * Unit responsible for figuring out the meta-data of ignite cache fields (field name, value type class name,
- * converter needed to get a common Java representation when the field value is of Ignite specific class).
- * Meta-data required for ignite cache fields serialization is being defined from {@link BinaryObject} and {@link org.apache.ignite.cache.QueryEntity}.
+ * Unit responsible for figuring out the meta-data of Apache Ignite cache fields (field name, value type class name,
+ * converter needed to get a common Java representation when the field value is of Apache Ignite specific class).
+ * Meta-data required for Apache Ignite cache fields serialization is being defined from {@link BinaryObject} and {@link org.apache.ignite.cache.QueryEntity}.
  * Resulting output is represented as a list of {@link IgniteCacheFieldMeta}.
  */
 public class IgniteCacheFieldMetaBuilder implements IIgniteCacheFieldMetaBuilder {
@@ -34,7 +34,8 @@ public class IgniteCacheFieldMetaBuilder implements IIgniteCacheFieldMetaBuilder
         Map<String, String> queryEntityFieldsInfo = getQueryEntityFieldsInfo();
 
         for (String fieldName : binaryObject.type().fieldNames()) {
-            String typeInfoFromQueryEntity = queryEntityFieldsInfo.get(fieldName.toUpperCase());
+            String typeInfoFromQueryEntity = Objects.requireNonNull(queryEntityFieldsInfo.get(fieldName.toUpperCase()),
+                    String.format("Query entity for field [%s] was not found", fieldName));
             String typeInfo = TypesResolver.toAvroType(typeInfoFromQueryEntity);
             IIgniteBinaryDataConverter fieldDataConverter;
 

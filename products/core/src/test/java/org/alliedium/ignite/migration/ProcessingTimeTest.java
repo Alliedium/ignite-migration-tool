@@ -3,10 +3,10 @@ package org.alliedium.ignite.migration;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.propeties.PropertiesResolver;
 import org.alliedium.ignite.migration.test.model.City;
-import org.junit.Before;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -20,7 +20,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * The purpose of this test is - gathering execution/processing time of all ignite migration tool.
+ * The purpose of this test is - gathering execution/processing time of all Apache Ignite migration tool.
  * It writes in logs gathered data and also into the csv file: /target/processingResults.csv.
  * The data from csv could be used in office excel or other csv readers in order to build diagrams or
  * other usable stuff which will make more easy/obvious processing time investigation.
@@ -32,7 +32,7 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
     private Path csvFilePath;
     private PropertiesResolver propertiesResolver;
 
-    @Before
+    @BeforeMethod
     public void beforeTestMethod() throws IOException {
         String csvFilePathStr = "./target/processingResults.csv";
         Files.deleteIfExists(Paths.get(csvFilePathStr));

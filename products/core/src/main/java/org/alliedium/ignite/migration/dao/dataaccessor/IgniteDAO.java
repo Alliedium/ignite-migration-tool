@@ -6,10 +6,10 @@ import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 
 /**
- * Unit provides as access to ignite caches (represented as {@link IIgniteCacheDAO}) and
+ * Unit provides as access to Apache Ignite caches (represented as {@link IIgniteCacheDAO}) and
  * cache's meta-data (name, size, existence, atomic long values {@link Ignite#atomicLong(String, long, boolean)}).
  * Caches' meta-data can be requested by cache name, list of which can also be returned by current unit.
- * Unit needs to be provided with ignite connection on initialization.
+ * Unit needs to be provided with Apache Ignite connection on initialization.
  */
 public class IgniteDAO implements IIgniteDAO {
 
