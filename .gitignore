@@ -57,7 +57,7 @@ Thumbs.db
 /products/**/*.iml
 /products/**/classes/*
 /products/**/maven*
-/products/**/surefire*
+/products/**/tests-ignitemigrationtool/
 /products/**/test-classes/*
 /products/**/results*.xml
 *.jar

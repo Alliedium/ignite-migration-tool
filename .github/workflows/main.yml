@@ -1,4 +1,4 @@
-name: docker-compose-actions-workflow
+name: CI
 on:
   # Triggers the workflow on push or pull request events
   push:
@@ -20,3 +20,7 @@ jobs:
         with:
           check_name: show-test-results
           report_paths: ./products/core/tests-ignitemigrationtool/surefire-reports/TEST-TestSuite.xml
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          directory: ./products/core/tests-ignitemigrationtool/site/jacoco/

@@ -2,6 +2,9 @@
 
 Apache Ignite Migration Tool is an open-source library for applying Apache Ignite database schema changes.
 
+[![Coverage Status](http://codecov.io/github/Alliedium/ignite-migration-tool/coverage.svg?branch=main)](http://codecov.io/github/Alliedium/ignite-migration-tool?branch=main)
+![CI](https://github.com/Alliedium/ignite-migration-tool/actions/workflows/main.yml/badge.svg)
+
 ## Features
  - The data migration is performed in 3 stages:
    - exporting data and meta data from a live Apache Ignite cluster into an isolated filesystem directory in form of Avro files.

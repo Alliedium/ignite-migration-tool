@@ -181,7 +181,7 @@ def notifySlack(String buildStatus, String system, String channel = null, String
 
                 if (test.errorStackTrace != null) {
                     def stackTraceStrings = Arrays.asList(test.errorStackTrace.split("\n")).find {
-                        it.trim().startsWith("at alliedplugins")
+                        it.trim().startsWith("at alliedium")
                     }
                     if (stackTraceStrings != null) {
                         def stackTrace = stackTraceStrings.join(",\n")
@@ -213,7 +213,7 @@ def notifySlack(String buildStatus, String system, String channel = null, String
 
     JSONObject branch = new JSONObject()
     branch.put('title', 'Branch')
-    branch.put('value', "<https://alliedplugins.atlassian.net/browse/" + currentBranchName + "|" + currentBranchName + ">")
+    branch.put('value', "<https://github.com/Alliedium/ignite-migration-tool/tree/" + currentBranchName + "|" + currentBranchName + ">")
     branch.put('short', true)
 
     JSONObject commitAuthor = new JSONObject()
@@ -223,7 +223,7 @@ def notifySlack(String buildStatus, String system, String channel = null, String
 
     JSONObject commitMessage = new JSONObject()
     commitMessage.put('title', 'Last Commit Message')
-    commitMessage.put('value', message + "\n" + "<https://bitbucket.org/allied_testing/ignitemigrationtool/commits/" + getLastCommitId(currentBranchName) + "|Last commit>")
+    commitMessage.put('value', message + "\n" + "<https://github.com/Alliedium/ignite-migration-tool/commit/" + getLastCommitId(currentBranchName) + "|Last commit>")
     commitMessage.put('short', false)
 
     JSONObject durationInfo = new JSONObject()
