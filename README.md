@@ -10,14 +10,16 @@ Apache Ignite Migration Tool is an open-source library for applying Apache Ignit
    1. exporting data and meta data from a live Apache Ignite cluster into an isolated filesystem directory in form of Avro files.
    2. applying database schema transformations to the exported data and writing the transformed data into a separate filesystem directory.
    3. uploading the transformed Avro files to the new cluster.
- - data and metadata transformations are defined in a way that is neither Apache Ignite nor Avro-specific (which allows for potential use of [Apache Beam](https://beam.apache.org/) for applying database transformations).
- -  data and metadata (excluding QueryEntity information which is encoded into the Avro table field types) transformations are applied to avro files and do not require a live Apache Ignite cluster.
- -  the tool can be used for creating Apache Ignite data backups that are both version and topology-independent. Cache metadata is backed up (as xml configuration) along with cache data 
+ - data and metadata transformations are defined in a way that is Avro format agnostic (which allows for potential use of [Apache Beam](https://beam.apache.org/) for applying database transformations).
+ -  data and metadata (excluding QueryEntity information which is encoded into the Avro table field types) transformations are applied to Avro files and do not require a live Apache Ignite cluster.
+ -  the tool can be used for creating Apache Ignite data backups that are both version and topology-independent. Cache metadata is backed up (as xml configuration) along with cache data. 
+ -  List of supported cache value field datatypes is limited by those allowed in QueryEntity (see https://ignite.apache.org/docs/latest/sql-reference/data-types).
+ -  Cache keys can be of arbitrary non-user defined Java types and `AffinityKey` on such.
 
 
 ## Assumptions
- - Apache Ignite cluster from which the data is migrated from and the cluster to which the data is migrated to should be different clusters
- - All nodes of Apache Ignite cluster to which the data is migrated to should have access to new defintions of all data classes (i.e. corresponding to the transformed schema). This can be achived by placing jar file with new data classes definitions to each node's class path. It is the tool's user responsibility to make sure that this assumption holds, the tool doesn't automate this process in any way.
+ - Apache Ignite cluster from which the data is migrated from and the cluster to which the data is migrated to should be different clusters.
+ - All nodes of Apache Ignite cluster to which the data is migrated to should have access to new definitions of all data classes (i.e. corresponding to the transformed schema). This can be achived by placing jar file with new data classes definitions to each node's class path. It is the tool's user responsibility to make sure that this assumption holds, the tool doesn't automate this process in any way.
  - Each cache is configured with `QueryEntity`, all cache fields not present in `QueryEntity` are invisible to the tool and won't be backed up.
  - Caches/tables that are not persisted in Ignite Persistence (in-memory only caches) are backed up by the tool along with the persisted caches. It is up to the data transformation patch (see [here](https://github.com/Alliedium/ignite-migration-tool/blob/main/products/demo/src/main/java/org/alliedium/ignite/migration/patches/AlterCachesDemoPatch.java) for a patch example) to make sure that in-memory caches are ignored (if needed) upon deserialization from Avro.
 
