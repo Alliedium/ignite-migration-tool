@@ -14,6 +14,7 @@ Apache Ignite Migration Tool is an open-source library for applying Apache Ignit
  -  Data and metadata (excluding QueryEntity information which is encoded into the Avro table field types) transformations are applied to Avro files and do not require a live Apache Ignite cluster.
  -  The tool can be used for creating data backups that are Apache Ignite version independent (assuming definitions of `QueryEntity`, `CacheConfiguration` and `AffinityKey` classes are stable).
  -  Source and target cluster topologies do not have to be the same.
+ -  Encrypted caches are supported.
  -  List of supported cache value field datatypes is limited by those allowed in QueryEntity (see https://ignite.apache.org/docs/latest/sql-reference/data-types).
  -  Cache keys can be of arbitrary non-user defined Java types and `AffinityKey` on such.
 
