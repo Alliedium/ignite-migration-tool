@@ -16,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.alliedium.ignite.migration.test.ClientAPI;
 import org.alliedium.ignite.migration.util.PathCombine;
 import org.alliedium.ignite.migration.test.model.City;
 import org.alliedium.ignite.migration.test.DefaultIgniteAtomicLongNamesProvider;
@@ -30,7 +31,7 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
 
     @Test
     public void sqlIgniteMigrationToolTest() throws SQLException, IOException {
-        clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
+        ClientAPI.deleteDirectoryRecursively(avroMainPath);
         Path path = Paths.get("src/test/resources/world.sql");
         if (!Files.exists(path)) {
             // path inside docker container
@@ -43,6 +44,8 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
         controller.serializeDataToAvro(avroTestSet);
+
+        clientAPI.clearIgniteAndCheckIgniteIsEmpty();
 
         processDataSetAndCompareWithInitial();
     }

@@ -13,6 +13,7 @@ import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheEntryKey;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.test.model.City;
+import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -20,8 +21,12 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import org.testng.asserts.Assertion;
+import org.testng.asserts.IAssert;
 
 import javax.cache.Cache;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
@@ -29,12 +34,13 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
     private ICacheEntryValue cacheValueDTO;
     private IgniteObjectStringConverter converter;
     private IgniteCacheDataWriter cacheDataWriter;
+    private IgniteCache<Integer, City> cache;
 
     @BeforeMethod
     public void beforeIgniteCacheDataWriterTestMethod() {
         ignite.destroyCache(cacheName);
         CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
-        ignite.createCache(configuration);
+        cache = ignite.createCache(configuration);
         converter = new IgniteObjectStringConverter();
         cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
     }
@@ -46,44 +52,47 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
     @Test
     public void write() {
-        ICacheData cacheData = getNextCacheData();
+        ICacheData cacheData = getNextCacheData(0);
 
         cacheDataWriter.write(cacheData);
+        cacheDataWriter.close();
 
-        Assert.assertTrue(ignite.cache(cacheName).size() > 0);
+        Assert.assertTrue(cache.size() > 0);
     }
 
     @Test
     public void testMultipleWrite() {
-        for (int cityIndex = 1; cityIndex < 1_000; cityIndex++) {
-            ICacheData cacheData = getNextCacheData();
+        for (int cityIndex = 0; cityIndex < 1_000; cityIndex++) {
+            ICacheData cacheData = getNextCacheData(cityIndex);
             cacheDataWriter.write(cacheData);
-            Assert.assertNotNull(ignite.cache(cacheName).get(cityIndex));
         }
-
         cacheDataWriter.close();
+
+        Assert.assertEquals(cache.size(), 1_000);
     }
 
-    private ICacheData getNextCacheData() {
+    private ICacheData getNextCacheData(int cityIndex) {
         if (cacheValueDTO == null) {
-            ignite.cache(cacheName).put(0, new City("test_city", "test_district", random.nextInt()));
-
-            IgniteCacheDAO igniteCacheDAO = new IgniteCacheDAO(ignite, cacheName);
-            BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
-            IIgniteCacheFieldMetaBuilder cacheFieldMetaBuilder = new IgniteCacheFieldMetaBuilder(cacheBinaryObject, igniteCacheDAO.getCacheQueryEntities());
-            IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new IgniteBinaryObjectConverter(cacheFieldMetaBuilder.getFieldsMetaData());
-
-
-            ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
-
-            for (Cache.Entry<Object, BinaryObject> entry : ignite.cache(cacheName).withKeepBinary().query(scanQuery)) {
-                cacheValueDTO = cacheValueConverter.convertFromEntity(entry.getValue());
-                break;
-            }
+            prepareCacheEntryValue();
         }
 
-        ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(ignite.cache(cacheName).size(), converter).build();
-
+        ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(cityIndex, converter).build();
         return new CacheData(cacheName, cacheKeyDTO, cacheValueDTO);
+    }
+
+    private void prepareCacheEntryValue() {
+        cache.put(0, new City("test_city", "test_district", random.nextInt()));
+
+        IgniteCacheDAO igniteCacheDAO = new IgniteCacheDAO(ignite, cacheName);
+        BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
+        IIgniteCacheFieldMetaBuilder cacheFieldMetaBuilder = new IgniteCacheFieldMetaBuilder(cacheBinaryObject, igniteCacheDAO.getCacheQueryEntities());
+        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new IgniteBinaryObjectConverter(cacheFieldMetaBuilder.getFieldsMetaData());
+
+        ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
+        for (Cache.Entry<Object, BinaryObject> entry : cache.withKeepBinary().query(scanQuery)) {
+            cacheValueDTO = cacheValueConverter.convertFromEntity(entry.getValue());
+            break;
+        }
+        cache.remove(0);
     }
 }

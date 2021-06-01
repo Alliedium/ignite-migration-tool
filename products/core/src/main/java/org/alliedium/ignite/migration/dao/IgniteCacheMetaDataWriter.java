@@ -34,6 +34,6 @@ public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> 
 
         logger.info("Creating ignite cache: " + cacheMetaData.getCacheName());
         ignite.getOrCreateCache(recreatingCacheConfiguration);
-        logger.info("Cache created successfully");
+        logger.info(String.format("Cache created [%s] successfully", cacheMetaData.getCacheName()));
     }
 }

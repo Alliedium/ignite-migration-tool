@@ -7,6 +7,7 @@ import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.transactions.Transaction;
 
@@ -22,6 +23,7 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
 
     private static final int CACHE_CREATION_TIMEOUT_SECONDS = 30;
     private final Map<String, IgniteCacheDAO> cacheDAOMap = new HashMap<>();
+    private final Map<String, IgniteDataStreamer<Object, BinaryObject>> binaryStreamers = new HashMap<>();
 
     public IgniteCacheDataWriter(IIgniteDTOConverter<String, Object> cacheKeyConverter, Ignite ignite) {
         super(cacheKeyConverter, ignite);
@@ -31,18 +33,13 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
     public void write(ICacheData data) {
         waitForCacheCreation(data.getCacheName());
 
-        if (cacheNeedsToBeRestored(data.getCacheName()) || isCacheEmpty(data.getCacheName())) {
+        if (cacheNeedsToBeRestored(data.getCacheName())) {
             IgniteCacheDAO igniteCacheDAO = getCacheDAO(data.getCacheName());
-            IgniteCache<Object, BinaryObject> igniteCache = igniteCacheDAO.getBinaryCache();
             String igniteCacheValueType = igniteCacheDAO.getCacheValueType();
             Map.Entry<Object, BinaryObject> cacheData = getCacheDataForInsert(ignite, data, igniteCacheValueType);
-            try (Transaction tx = ignite.transactions().txStart(PESSIMISTIC, REPEATABLE_READ)) {
-                igniteCache.put(cacheData.getKey(), cacheData.getValue());
-                tx.commit();
-            }
-            catch (Exception e) {
-                logger.warn("FAILED to repopulate cache item " + igniteCache.getName() + " due to an error: " + e.getMessage());
-            }
+
+            binaryStreamers.get(data.getCacheName())
+                    .addData(cacheData.getKey(), cacheData.getValue());
         }
         else {
             logger.info("Skipping cache refilling for already populated one: " + data.getCacheName());
@@ -66,18 +63,25 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
         return new AbstractMap.SimpleEntry<>(cacheKeyConverter.convertFromDto(cacheEntryKeyString), binaryObjectFromEntryValue);
     }
 
-    private boolean isCacheEmpty(String cacheName) {
-        return ignite.cache(cacheName) == null || ignite.cache(cacheName).size() == 0;
-    }
-
     private void waitForCacheCreation(String cacheName) {
+        if (binaryStreamers.containsKey(cacheName)) {
+            return;
+        }
+
         long startTime = System.currentTimeMillis();
         do {
             if (ignite.cacheNames().contains(cacheName)) {
+                IgniteDataStreamer<Object, BinaryObject> binaryStreamer = ignite.dataStreamer(cacheName);
+                // todo: this property can be handled by user
+                // basically it means override value of keys which already exist or not.
+                // by allowing overwrite option ignite data streamer becomes more like put and putAll
+                // but faster.
+                binaryStreamer.allowOverwrite(true);
+                binaryStreamers.put(cacheName, binaryStreamer);
                 return;
             }
             try {
-                TimeUnit.SECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(1);
             } catch (InterruptedException e) {
                 throw new IllegalStateException(e);
             }
@@ -91,5 +95,7 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
     @Override
     public void close() {
         cacheDAOMap.clear();
+        binaryStreamers.forEach((cacheName, binaryStreamer) -> binaryStreamer.close());
+        binaryStreamers.clear();
     }
 }

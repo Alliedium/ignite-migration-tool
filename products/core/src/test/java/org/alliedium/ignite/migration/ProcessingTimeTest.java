@@ -3,8 +3,12 @@ package org.alliedium.ignite.migration;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.propeties.PropertiesResolver;
 import org.alliedium.ignite.migration.test.model.City;
+import org.apache.ignite.IgniteCache;
+import org.apache.ignite.IgniteDataStreamer;
+import org.apache.ignite.configuration.CacheConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
@@ -13,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockito.Mockito.mock;
@@ -31,6 +34,7 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
     private String cacheName = "processing_time_test";
     private Path csvFilePath;
     private PropertiesResolver propertiesResolver;
+    private Controller controller;
 
     @BeforeMethod
     public void beforeTestMethod() throws IOException {
@@ -40,32 +44,47 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
             Files.createDirectories(Paths.get("./target"));
         }
         csvFilePath = Files.createFile(Paths.get(csvFilePathStr));;
-        Files.write(csvFilePath, "ElementsCount,SecondsToProcess,MillisecondsToProcess\n".getBytes());
+        String columns = "ElementsCount," +
+                "total," +
+                "ignite -> avro," +
+                "avro -> ignite\n";
+        Files.write(csvFilePath, columns.getBytes());
         propertiesResolver = mock(PropertiesResolver.class);
         when(propertiesResolver.getDispatchersElementsLimit()).thenReturn(1000);
+        controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY, propertiesResolver);
     }
 
     @Test
     public void dataProcessingTimeTest() throws IOException {
         // This loop provides a way to gather processing time step by step
         // no processing time will be lost, all the data will be gathered inside csv file
-        /*for (int i = 1_000; i <= 100_000; i+=3_000) {
-            dataProcessingTimeTest(i);
-        }*/
+        //for (int i = 50_000; i <= 1_000_000; i+=50_000) {
+        //    dataProcessingTimeTest(i);
+        //}
 
-        dataProcessingTimeTest(10_000);
+        dataProcessingTimeTest(50_000);
     }
 
     private void dataProcessingTimeTest(int elementsCount) throws IOException {
-        List<City> cityList = clientAPI.createTestCityCacheAndInsertData(cacheName, elementsCount);
+        CacheConfiguration<Integer, City> cacheConfiguration = clientAPI.createTestCityCacheConfiguration(cacheName);
+        IgniteCache<Integer, City> igniteCache = ignite.createCache(cacheConfiguration);
+        try (IgniteDataStreamer<Integer, City> dataStreamer = ignite.dataStreamer(cacheName)) {
+            for (int cityIndex = 0; cityIndex < elementsCount; cityIndex++) {
+                dataStreamer.addData(cityIndex, new City("test_city" + cityIndex, "test_district", random.nextInt()));
+            }
+        }
 
         long startTime = System.nanoTime();
 
-        long clearIgniteTime = serializeDeserialize();
+        long serializeTime = serialize();
+
+        long clearIgniteTime = clearIgnite();
+
+        long deserializeTime = deserialize();
 
         long result = System.nanoTime() - startTime - clearIgniteTime;
 
-        clientAPI.assertIgniteCacheEqualsList(cityList, cacheName);
+        Assert.assertEquals(igniteCache.size(), elementsCount);
 
         logger.info("--------------------- processing time test ---------------------------");
         logger.info("elementsCount = " + elementsCount);
@@ -73,24 +92,31 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
                 " | milliseconds: " + TimeUnit.NANOSECONDS.toMillis(result) +
                 " | seconds: " + TimeUnit.NANOSECONDS.toSeconds(result));
 
-        Files.write(csvFilePath, (elementsCount + "," + TimeUnit.NANOSECONDS.toSeconds(result)
-                + "," + TimeUnit.NANOSECONDS.toMillis(result) + "\n").getBytes(), StandardOpenOption.APPEND);
+        String record = elementsCount + ","
+                + TimeUnit.NANOSECONDS.toMillis(result) + ","
+                + TimeUnit.NANOSECONDS.toMillis(serializeTime) + ","
+                + TimeUnit.NANOSECONDS.toMillis(deserializeTime) + "\n";
+
+        Files.write(csvFilePath, record.getBytes(), StandardOpenOption.APPEND);
 
         clientAPI.clearIgniteAndCheckIgniteIsEmpty();
     }
 
-    private long serializeDeserialize() {
-        Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY, propertiesResolver);
+    private long serialize() {
+        long serializeStartTime = System.nanoTime();
         controller.serializeDataToAvro(avroTestSet);
+        return System.nanoTime() - serializeStartTime;
+    }
 
-        long startTime = System.nanoTime();
-
+    private long clearIgnite() {
+        long clearIgniteStartTime = System.nanoTime();
         clientAPI.clearIgniteAndCheckIgniteIsEmpty();
+        return System.nanoTime() - clearIgniteStartTime;
+    }
 
-        long clearIgniteTime = System.nanoTime() - startTime;
-
+    private long deserialize() {
+        long deserializeStartTime = System.nanoTime();
         controller.deserializeDataFromAvro(avroTestSet);
-
-        return clearIgniteTime;
+        return System.nanoTime() - deserializeStartTime;
     }
 }
