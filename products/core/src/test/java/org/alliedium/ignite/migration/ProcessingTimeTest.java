@@ -33,23 +33,23 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
     protected static final Logger logger = LoggerFactory.getLogger(ProcessingTimeTest.class);
     private String cacheName = "processing_time_test";
     private Path csvFilePath;
-    private PropertiesResolver propertiesResolver;
     private Controller controller;
 
     @BeforeMethod
     public void beforeTestMethod() throws IOException {
-        String csvFilePathStr = "./target/processingResults.csv";
+        String resultsFileName = System.getProperty(Properties.resultsFileName, "processingResults");
+        String csvFilePathStr = String.format("./target/%s.csv", resultsFileName);
         Files.deleteIfExists(Paths.get(csvFilePathStr));
         if (Files.notExists(Paths.get("./target"))) {
             Files.createDirectories(Paths.get("./target"));
         }
-        csvFilePath = Files.createFile(Paths.get(csvFilePathStr));;
+        csvFilePath = Files.createFile(Paths.get(csvFilePathStr));
         String columns = "ElementsCount," +
                 "total," +
                 "ignite -> avro," +
                 "avro -> ignite\n";
         Files.write(csvFilePath, columns.getBytes());
-        propertiesResolver = mock(PropertiesResolver.class);
+        PropertiesResolver propertiesResolver = mock(PropertiesResolver.class);
         when(propertiesResolver.getDispatchersElementsLimit()).thenReturn(1000);
         controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY, propertiesResolver);
     }
@@ -58,11 +58,13 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
     public void dataProcessingTimeTest() throws IOException {
         // This loop provides a way to gather processing time step by step
         // no processing time will be lost, all the data will be gathered inside csv file
-        //for (int i = 50_000; i <= 1_000_000; i+=50_000) {
-        //    dataProcessingTimeTest(i);
-        //}
+        int step = Integer.getInteger(Properties.recordsStep, 50_000);
+        int maxRecords = Integer.getInteger(Properties.maxRecords, 50_000);
+        for (int i = step; i <= maxRecords; i+=step) {
+            dataProcessingTimeTest(i);
+        }
 
-        dataProcessingTimeTest(50_000);
+        //dataProcessingTimeTest(50_000);
     }
 
     private void dataProcessingTimeTest(int elementsCount) throws IOException {
@@ -118,5 +120,11 @@ public class ProcessingTimeTest extends ClientIgniteBaseTest {
         long deserializeStartTime = System.nanoTime();
         controller.deserializeDataFromAvro(avroTestSet);
         return System.nanoTime() - deserializeStartTime;
+    }
+
+    private interface Properties {
+        String resultsFileName = "resultsFileName";
+        String recordsStep = "recordsStep";
+        String maxRecords = "maxRecords";
     }
 }
