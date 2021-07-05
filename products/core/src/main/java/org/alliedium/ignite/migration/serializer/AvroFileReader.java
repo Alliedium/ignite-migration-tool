@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
 import org.alliedium.ignite.migration.util.PathCombine;
@@ -112,14 +113,16 @@ public class AvroFileReader implements IAvroFileReader {
             Schema cacheDataAvroSchema = getCacheDataAvroSchema();
             DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(cacheDataAvroSchema);
             DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(cacheDataFilePath.toFile(), datumReader);
+            AvroGenericRecordToConverter avroGenericRecordToConverter = new AvroGenericRecordToConverter(fieldsTypes);
+            AvroFieldMetaContainer avroFieldMetaContainer = new AvroFieldMetaContainer(cacheDataAvroSchema);
+
+            GenericRecord cacheDataRecord = null;
             while (dataFileReader.hasNext()) {
-                GenericRecord deserializedCacheDataRecord = dataFileReader.next();
+                cacheDataRecord = dataFileReader.next(cacheDataRecord);
                 ICacheEntryKey cacheEntryKey = new CacheEntryKey(
-                        deserializedCacheDataRecord.get(AVRO_GENERIC_RECORD_KEY_FIELD_NAME).toString());
-                AvroFieldMetaContainer avroFieldMetaContainer = new AvroFieldMetaContainer(deserializedCacheDataRecord.getSchema());
-                AvroGenericRecordToConverter avroGenericRecordToConverter = new AvroGenericRecordToConverter(fieldsTypes);
+                        cacheDataRecord.get(AVRO_GENERIC_RECORD_KEY_FIELD_NAME).toString());
                 ICacheEntryValue cacheEntryValue = avroGenericRecordToConverter
-                        .getCacheEntryValue(deserializedCacheDataRecord, avroFieldMetaContainer);
+                        .getCacheEntryValue(cacheDataRecord, avroFieldMetaContainer);
 
                 cacheDataDispatcher.publish(new CacheData(cacheName, cacheEntryKey, cacheEntryValue));
             }
