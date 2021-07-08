@@ -42,7 +42,10 @@ public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
     public void publish(DTO cacheDTO) {
         checkNotFinished();
         try {
-            elements.put(cacheDTO);
+            boolean inserted = elements.offer(cacheDTO, 1, TimeUnit.SECONDS);
+            if (!inserted) {
+                publish(cacheDTO);
+            }
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
         }
@@ -76,7 +79,13 @@ public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
                 }
             }
         } catch(InterruptedException e) {
+            e.printStackTrace();
+            logger.error("Dispatching failed due to exception ", e);
             throw new IllegalStateException(e);
+        } catch (RuntimeException | Error e) {
+            e.printStackTrace();
+            logger.error("Dispatching failed due to exception", e);
+            throw e;
         } finally {
             closeResources();
         }
@@ -97,6 +106,8 @@ public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
         } catch(Exception e) {
             logger.error("Failed to close consumers", e);
             throw new IllegalStateException(e);
+        } finally {
+            finished.set(true);
         }
     }
 }

@@ -39,12 +39,21 @@ public class AvroGenericRecordToConverter implements IAvroGenericRecordToConvert
                 ICacheEntryValueFieldValue CacheEntryValueFieldValue = getCacheEntryValueFieldValue(
                         avroGenericRecord.get(genericRecordField.name()), genericRecordField.name(), avroFieldMetaContainer);
                 ICacheEntryValueField cacheEntryValueField = new CacheEntryValueField(
-                        genericRecordField.name(), fieldsTypes.get(genericRecordField.name()), CacheEntryValueFieldValue);
+                        genericRecordField.name(), getFieldType(genericRecordField.name()), CacheEntryValueFieldValue);
                 cacheEntryValueFieldList.add(cacheEntryValueField);
             }
         }
 
         return new CacheEntryValue(cacheEntryValueFieldList);
+    }
+
+    private String getFieldType(String fieldName) {
+        String type = fieldsTypes.get(fieldName);
+        if (type == null) {
+            type = fieldsTypes.get(fieldName.toUpperCase());
+        }
+
+        return type;
     }
 
     private ICacheEntryValueFieldValue getCacheEntryValueFieldValue(Object genericRecordFieldValue, String genericRecordFieldName, AvroFieldMetaContainer avroFieldMetaContainer) {

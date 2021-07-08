@@ -32,7 +32,7 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
     private final String cacheName = "test_cache";
     private ICacheEntryValue cacheValueDTO;
-    private IgniteObjectStringConverter converter;
+    private IIgniteDTOConverter<String, Object> converter;
     private IgniteCacheDataWriter cacheDataWriter;
     private IgniteCache<Integer, City> cache;
 
@@ -41,7 +41,7 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
         ignite.destroyCache(cacheName);
         CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
         cache = ignite.createCache(configuration);
-        converter = new IgniteObjectStringConverter();
+        converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
         cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
     }
 

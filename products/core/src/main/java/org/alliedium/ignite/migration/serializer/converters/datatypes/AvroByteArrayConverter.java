@@ -1,7 +1,6 @@
 package org.alliedium.ignite.migration.serializer.converters.datatypes;
 
 import java.nio.ByteBuffer;
-import java.util.Base64;
 import org.apache.avro.util.Utf8;
 
 /**
@@ -18,7 +17,12 @@ public class AvroByteArrayConverter implements IAvroDerivedTypeConverter {
     }
 
     public byte[] convertFromAvro(Object fieldData) {
-        assert fieldData instanceof ByteBuffer;
+        assert (fieldData instanceof ByteBuffer) || (fieldData instanceof Utf8);
+        // todo: fix this, the problem is that the Avro Utf8 object has doc: byte[]
+        if (fieldData instanceof Utf8) {
+            return ((Utf8) fieldData).getBytes();
+        }
+
         return ((ByteBuffer) fieldData).array();
     }
 

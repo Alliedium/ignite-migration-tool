@@ -64,10 +64,8 @@ public class Controller {
 
         Runnable scanner = () -> igniteScanner.read(igniteDAO, cacheMetaDataDispatcher, cacheDataDispatcher, atomicsLongDispatcher);
 
-        TasksExecutor tasksExecutor = new TasksExecutor(scanner, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher);
-        tasksExecutor.execute();
-        tasksExecutor.waitForCompletion();
-        tasksExecutor.shutdown();
+        TasksExecutor.execute(scanner, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher)
+                .waitForCompletion();
     }
 
     /**
@@ -100,10 +98,7 @@ public class Controller {
             avroDeserializer.deserializeAtomicsLong(atomicsLongDispatcher);
         };
 
-        TasksExecutor tasksExecutor = new TasksExecutor(deserializer, cacheDataDispatcher, cacheMetaDataDispatcher,
-                atomicsLongDispatcher);
-        tasksExecutor.execute();
-        tasksExecutor.waitForCompletion();
-        tasksExecutor.shutdown();
+        TasksExecutor.execute(deserializer, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher)
+                .waitForCompletion();
     }
 }

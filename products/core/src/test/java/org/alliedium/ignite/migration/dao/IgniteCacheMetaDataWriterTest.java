@@ -18,15 +18,14 @@ public class IgniteCacheMetaDataWriterTest {
 
     @Test
     public void write() {
-        IgniteObjectStringConverter stringConverter = new IgniteObjectStringConverter();
         Ignite ignite = Mockito.mock(Ignite.class);
         CacheConfiguration<Object, BinaryObject> cacheConfiguration = new CacheConfiguration<>();
         Collection<QueryEntity> queryEntityCollection = Collections.singleton(new QueryEntity());
-        IgniteCacheMetaDataWriter cacheMetaDataWriter = new IgniteCacheMetaDataWriter(stringConverter, ignite);
+        IgniteCacheMetaDataWriter cacheMetaDataWriter = new IgniteCacheMetaDataWriter(IgniteObjectStringConverter.GENERIC_CONVERTER, ignite);
 
         CacheMetaData metaData = new CacheMetaData("cacheName",
-                new CacheConfigurationData(stringConverter.convertFromEntity(cacheConfiguration)),
-                new CacheEntryMetaData(stringConverter.convertFromEntity(queryEntityCollection)));
+                new CacheConfigurationData(IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER.convertFromEntity(cacheConfiguration)),
+                new CacheEntryMetaData(IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER.convertFromEntity(queryEntityCollection)));
 
         cacheMetaDataWriter.write(metaData);
 

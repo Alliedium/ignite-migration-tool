@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.patchtools;
 
+import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;
 import org.alliedium.ignite.migration.dao.dtobuilder.EntryMetaBuilder;
@@ -19,7 +20,9 @@ import java.util.function.Consumer;
 
 public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
 
-    private static final IgniteObjectStringConverter converter = new IgniteObjectStringConverter();
+    private static final IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter = IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;
+    private static final IIgniteDTOConverter<String, CacheConfiguration<Object, BinaryObject>> cacheConfigConverter = IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER;
+    private static final IIgniteDTOConverter<String, Object> converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
     private final ICacheMetaData cacheMetaData;
 
     public MetaDataTransformer(ICacheMetaData cacheMetaData) {
@@ -58,9 +61,9 @@ public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
     private MetaDataTransformer modifyMetaData(Consumer<QueryEntity> queryEntityModifier) {
         // todo: add check for class, because not all classes are supported
         CacheConfiguration<Object, BinaryObject> cacheConfiguration =
-                (CacheConfiguration<Object, BinaryObject>) converter.convertFromDto(cacheMetaData.getConfiguration().toString());
+                cacheConfigConverter.convertFromDto(cacheMetaData.getConfiguration().toString());
         String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
-        Collection<QueryEntity> queryEntities = (Collection<QueryEntity>) converter.convertFromDto(cacheEntryMeta);
+        Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDto(cacheEntryMeta);
 
         queryEntities.forEach(queryEntityModifier);
 

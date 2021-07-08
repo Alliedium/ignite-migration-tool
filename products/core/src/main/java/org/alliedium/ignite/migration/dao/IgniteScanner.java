@@ -41,7 +41,7 @@ public class IgniteScanner implements IIgniteReader {
     public IgniteScanner(IgniteAtomicLongNamesProvider atomicNamesProvider, Ignite ignite) {
         this.atomicNamesProvider = atomicNamesProvider;
         this.ignite = ignite;
-        converter = new IgniteObjectStringConverter();
+        converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
     }
 
     @Override
