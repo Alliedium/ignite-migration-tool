@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.alliedium.ignite.migration.util.PathCombine;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileReader;
@@ -28,38 +29,39 @@ import org.slf4j.LoggerFactory;
 public class AvroFileReader implements IAvroFileReader {
 
     private static final Logger logger = LoggerFactory.getLogger(AvroFileReader.class);
-    private static final String AVRO_GENERIC_RECORD_KEY_FIELD_NAME = "key";
     private static final String AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
     private static final String AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
     private static final String AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_NAME_FIELD_NAME = "igniteAtomicLongName";
     private static final String AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME = "igniteAtomicLongValue";
 
+    private final CacheAvroFilesLocator filesLocator;
     private final PathCombine serializedCachePath;
 
     public AvroFileReader(PathCombine serializedCachePath) {
         this.serializedCachePath = serializedCachePath;
+        this.filesLocator = new CacheAvroFilesLocator(serializedCachePath);
     }
 
     public Schema getCacheConfigurationsAvroSchema() throws IOException {
-        Path avroSchemaFile = serializedCachePath.plus(AvroFileNames.SCHEMA_FOR_CACHE_CONFIGURATION_FILENAME).getPath();
+        Path avroSchemaFile = filesLocator.cacheConfigurationSchemaPath();
         return new Schema.Parser().parse(avroSchemaFile.toFile());
     }
 
     public Schema getCacheDataAvroSchema() throws IOException {
-        Path avroSchemaFile = serializedCachePath.plus(AvroFileNames.SCHEMA_FOR_CACHE_DATA_FILENAME).getPath();
+        Path avroSchemaFile = filesLocator.cacheDataSchemaPath();
         return new Schema.Parser().parse(avroSchemaFile.toFile());
     }
 
     public String getCacheConfiguration() throws IOException {
         Schema cacheConfigurationsAvroSchema = getCacheConfigurationsAvroSchema();
-        Path cacheConfigurationFilePath = serializedCachePath.plus(AvroFileNames.CACHE_CONFIGURATION_FILENAME).getPath();
+        Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
         GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
         return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME).toString();
     }
 
     public String getCacheEntryMeta() throws IOException {
         Schema cacheConfigurationsAvroSchema = getCacheConfigurationsAvroSchema();
-        Path cacheConfigurationFilePath = serializedCachePath.plus(AvroFileNames.CACHE_CONFIGURATION_FILENAME).getPath();
+        Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
         GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
         return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME).toString();
     }
@@ -108,7 +110,7 @@ public class AvroFileReader implements IAvroFileReader {
      */
     @Override
     public void distributeCacheData(String cacheName, Map<String, String> fieldsTypes, IDispatcher<ICacheData> cacheDataDispatcher) throws IOException {
-        Path cacheDataFilePath = serializedCachePath.plus(AvroFileNames.CACHE_DATA_FILENAME).getPath();
+        Path cacheDataFilePath = filesLocator.cacheDataPath();
         if (Files.exists(cacheDataFilePath)) {
             Schema cacheDataAvroSchema = getCacheDataAvroSchema();
             DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(cacheDataAvroSchema);
@@ -120,7 +122,7 @@ public class AvroFileReader implements IAvroFileReader {
             while (dataFileReader.hasNext()) {
                 cacheDataRecord = dataFileReader.next(cacheDataRecord);
                 ICacheEntryKey cacheEntryKey = new CacheEntryKey(
-                        cacheDataRecord.get(AVRO_GENERIC_RECORD_KEY_FIELD_NAME).toString());
+                        cacheDataRecord.get(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME).toString());
                 ICacheEntryValue cacheEntryValue = avroGenericRecordToConverter
                         .getCacheEntryValue(cacheDataRecord, avroFieldMetaContainer);
 
