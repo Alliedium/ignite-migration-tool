@@ -5,6 +5,7 @@ import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheEntryKey;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMetaContainer;
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericData;
@@ -15,8 +16,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class CacheDataWriter implements IDataWriter<ICacheData> {
-
-    private static final String AVRO_GENERIC_RECORD_KEY_FIELD_NAME = "key";
 
     private final DataFileWriter<GenericRecord> dataFileWriter;
     private final Schema cacheDataAvroSchema;
@@ -54,7 +53,7 @@ public class CacheDataWriter implements IDataWriter<ICacheData> {
                                                           Schema avroSchema, ICacheFieldMetaContainer fieldTypeConvertersContainer) {
         GenericRecord genericRecord = new GenericData.Record(avroSchema);
 
-        genericRecord.put(AVRO_GENERIC_RECORD_KEY_FIELD_NAME, cacheKey.toString());
+        genericRecord.put(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME, cacheKey.toString());
 
         List<String> cacheValueFieldNameList = cacheValue.getFieldNamesList();
         for (String fieldName : cacheValueFieldNameList) {

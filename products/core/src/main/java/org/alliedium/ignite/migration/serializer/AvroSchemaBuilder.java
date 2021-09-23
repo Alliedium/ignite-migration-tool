@@ -3,6 +3,7 @@ package org.alliedium.ignite.migration.serializer;
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMetaContainer;
 import java.util.List;
 
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
@@ -16,7 +17,6 @@ import org.apache.avro.SchemaBuilder;
  */
 public class AvroSchemaBuilder implements IAvroSchemaBuilder {
 
-    private static final String KEY_FIELD_NAME = "key";
     private static final String CACHE_CONFIGURATIONS_RECORD_NAME = "CacheConfigurations";
     private static final String RECORDS_NAMESPACE = "test";
     private static final String ATOMIC_STRUCTURE_RECORD_NAME = "AtomicStructure";
@@ -59,7 +59,8 @@ public class AvroSchemaBuilder implements IAvroSchemaBuilder {
         final SchemaBuilder.FieldAssembler<Schema> cacheDataAvroSchemaAssembly = SchemaBuilder.record(CACHE_DATA_RECORD_NAME)
             .namespace(CACHE_DATA_RECORD_NAMESPACE).fields();
 
-        cacheDataAvroSchemaAssembly.name(KEY_FIELD_NAME).type().stringType().noDefault();
+        cacheDataAvroSchemaAssembly.name(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME)
+                .type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
 
         for (String cacheValueFieldName : cacheValueFieldNamesList) {
             converterContainer.getFieldTypeMeta(cacheValueFieldName).getAvroSchemaFieldAssembler().assembleAvroSchemaField(cacheDataAvroSchemaAssembly, cacheValueFieldName);

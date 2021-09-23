@@ -14,38 +14,24 @@ import java.nio.file.Path;
 public class PatchProcessor implements IPatchProcessor {
 
     private final IPatch patch;
-    private final Path sourcePath;
-    private final Path destinationPath;
+    private final IAvroDeserializer deserializer;
+    private final IDataWriter<ICacheMetaData> cacheMetaDataSerializer;
+    private final IDataWriter<ICacheData> cacheDataSerializer;
 
     public PatchProcessor(Path sourcePath, Path destinationPath, IPatch patch) {
         this.patch = patch;
-        this.sourcePath = sourcePath;
-        this.destinationPath = destinationPath;
+        // prepare for read
+        deserializer = new AvroDeserializer(sourcePath);
+        AvroSerializer serializer = new AvroSerializer(destinationPath);
+        cacheMetaDataSerializer = serializer.getCacheMetaDataSerializer();
+        cacheDataSerializer = serializer.getCacheDataSerializer();
     }
 
     @Override
     public void process() {
-        // prepare for read
-        IAvroDeserializer deserializer = new AvroDeserializer(sourcePath);
-
-        AvroSerializer serializer = new AvroSerializer(destinationPath);
-        IDataWriter<ICacheMetaData> cacheMetaDataSerializer = serializer.getCacheMetaDataSerializer();
-        IDataWriter<ICacheData> cacheDataSerializer = serializer.getCacheDataSerializer();
-
         // patch
-        IDataWriter<ICacheMetaData> cacheMetaDataWriter = metaData -> {
-            // patch metadata
-            ICacheMetaData resultMetaData = patch.transformMetaData(metaData);
-            // writing back to files
-            cacheMetaDataSerializer.write(resultMetaData);
-        };
-
-        IDataWriter<ICacheData> cacheDataWriter = cacheData -> {
-            // patch data
-            ICacheData resultCacheData = patch.transformData(cacheData);
-            // writing back to files
-            cacheDataSerializer.write(resultCacheData);
-        };
+        IDataWriter<ICacheMetaData> cacheMetaDataWriter = this::patchCacheMetaData;
+        IDataWriter<ICacheData> cacheDataWriter = this::patchCacheData;
 
         // setup start of patch
         Dispatcher<ICacheMetaData> cacheMetaDataDispatcher = new Dispatcher<>();
@@ -53,15 +39,37 @@ public class PatchProcessor implements IPatchProcessor {
 
         Dispatcher<ICacheData> cacheDataDispatcher = new Dispatcher<>();
         cacheDataDispatcher.subscribe(cacheDataWriter);
+        Runnable deserialize = ()-> deserializer.deserializeCaches(cacheMetaDataDispatcher, cacheDataDispatcher);
 
-        TasksExecutor executor = new TasksExecutor(cacheMetaDataDispatcher, cacheDataDispatcher);
-        executor.execute();
-
-        deserializer.deserializeCaches(cacheMetaDataDispatcher, cacheDataDispatcher);
-
-        executor.waitForCompletion();
+        TasksExecutor.execute(deserialize, cacheMetaDataDispatcher, cacheDataDispatcher)
+                .waitForCompletion();
         closeResources(cacheMetaDataSerializer, cacheDataSerializer);
-        executor.shutdown();
+    }
+
+    private void patchCacheMetaData(ICacheMetaData metaData) {
+        try {
+            // patch metadata
+            ICacheMetaData resultMetaData = patch.transformMetaData(metaData);
+            // writing back to files
+            cacheMetaDataSerializer.write(resultMetaData);
+        } catch (Throwable t) {
+            throw new IllegalStateException(
+                    String.format("Exception occurred while patching meta data of cache: %s",
+                            metaData.getCacheName()), t);
+        }
+    }
+
+    private void patchCacheData(ICacheData cacheData) {
+        try {
+            // patch data
+            ICacheData resultCacheData = patch.transformData(cacheData);
+            // writing back to files
+            cacheDataSerializer.write(resultCacheData);
+        } catch (Throwable t) {
+            throw new IllegalStateException(
+                    String.format("Exception occurred while patching cache data of cache: %s",
+                            cacheData.getCacheName()), t);
+        }
     }
 
     private void closeResources(AutoCloseable... autoCloseables) {

@@ -26,7 +26,7 @@ public class IgniteWritersFactoryImpl implements IgniteWritersFactory {
 
     public IgniteWritersFactoryImpl(Ignite ignite) {
         this.ignite = ignite;
-        cacheKeyConverter = new IgniteObjectStringConverter();
+        cacheKeyConverter = IgniteObjectStringConverter.GENERIC_CONVERTER;
     }
 
     public IDataWriter<ICacheMetaData> getIgniteCacheMetaDataWriter() {

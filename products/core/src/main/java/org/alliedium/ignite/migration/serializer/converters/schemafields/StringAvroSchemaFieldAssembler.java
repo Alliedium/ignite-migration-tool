@@ -12,7 +12,8 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
 class StringAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
 
     public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName) {
-        fieldAssembler.name(fieldName).type(SchemaBuilder.unionOf().stringType().and().array().items().stringType().and().nullType().endUnion()).noDefault();
+        fieldAssembler.name(fieldName)
+                .type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
     }
 
 }

@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
@@ -26,7 +27,6 @@ import org.apache.avro.util.Utf8;
  */
 public class AvroGenericRecordToConverter implements IAvroGenericRecordToConverter {
 
-    private static final String AVRO_GENERIC_RECORD_KEY_FIELD_NAME = "key";
     private final Map<String, String> fieldsTypes;
 
     public AvroGenericRecordToConverter(Map<String, String> fieldsTypes) {
@@ -35,16 +35,25 @@ public class AvroGenericRecordToConverter implements IAvroGenericRecordToConvert
     public ICacheEntryValue getCacheEntryValue(GenericRecord avroGenericRecord, AvroFieldMetaContainer avroFieldMetaContainer) {
         List<ICacheEntryValueField> cacheEntryValueFieldList = new ArrayList<>();
         for (Field genericRecordField : avroGenericRecord.getSchema().getFields()) {
-            if (!genericRecordField.name().equalsIgnoreCase(AVRO_GENERIC_RECORD_KEY_FIELD_NAME)) {
+            if (!genericRecordField.name().equalsIgnoreCase(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME)) {
                 ICacheEntryValueFieldValue CacheEntryValueFieldValue = getCacheEntryValueFieldValue(
                         avroGenericRecord.get(genericRecordField.name()), genericRecordField.name(), avroFieldMetaContainer);
                 ICacheEntryValueField cacheEntryValueField = new CacheEntryValueField(
-                        genericRecordField.name(), fieldsTypes.get(genericRecordField.name()), CacheEntryValueFieldValue);
+                        genericRecordField.name(), getFieldType(genericRecordField.name()), CacheEntryValueFieldValue);
                 cacheEntryValueFieldList.add(cacheEntryValueField);
             }
         }
 
         return new CacheEntryValue(cacheEntryValueFieldList);
+    }
+
+    private String getFieldType(String fieldName) {
+        String type = fieldsTypes.get(fieldName);
+        if (type == null) {
+            type = fieldsTypes.get(fieldName.toUpperCase());
+        }
+
+        return type;
     }
 
     private ICacheEntryValueFieldValue getCacheEntryValueFieldValue(Object genericRecordFieldValue, String genericRecordFieldName, AvroFieldMetaContainer avroFieldMetaContainer) {

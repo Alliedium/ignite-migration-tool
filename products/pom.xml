@@ -16,7 +16,7 @@
         <repoDirectory>repo</repoDirectory>
 
         <surefire.version>3.0.0-M5</surefire.version>
-        <ignite.version>2.10.0</ignite.version>
+        <ignite.version>2.11.0</ignite.version>
         <project.version>1.0.0</project.version>
     </properties>
     <modules>
@@ -76,7 +76,7 @@
             <dependency>
                 <groupId>com.thoughtworks.xstream</groupId>
                 <artifactId>xstream</artifactId>
-                <version>1.4.17</version>
+                <version>1.4.18</version>
             </dependency>
             <dependency>
                 <groupId>org.mockito</groupId>

@@ -1,6 +1,8 @@
 package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
+import org.alliedium.ignite.migration.dao.converters.IgniteBinaryObjectConverter;
+import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.binary.BinaryObject;
@@ -9,6 +11,9 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import java.util.Collection;
 
 public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> {
+
+    private final IIgniteDTOConverter<String, CacheConfiguration<Object, BinaryObject>> configurationConverter = IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER;
+    private final IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter = IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;
 
     public IgniteCacheMetaDataWriter(IIgniteDTOConverter<String, Object> cacheKeyConverter, Ignite ignite) {
         super(cacheKeyConverter, ignite);
@@ -26,9 +31,9 @@ public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> 
 
     private void recreateIgniteCache(Ignite ignite, ICacheMetaData cacheMetaData) {
         String cacheConfigurationDTO = cacheMetaData.getConfiguration().toString();
-        CacheConfiguration<Object, BinaryObject> recreatingCacheConfiguration = (CacheConfiguration<Object, BinaryObject>) cacheKeyConverter.convertFromDto(cacheConfigurationDTO);
+        CacheConfiguration<Object, BinaryObject> recreatingCacheConfiguration = configurationConverter.convertFromDto(cacheConfigurationDTO);
         String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
-        Collection<QueryEntity> recreatingCacheQueryEntities = (Collection<QueryEntity>) cacheKeyConverter.convertFromDto(cacheEntryMeta);
+        Collection<QueryEntity> recreatingCacheQueryEntities = queryEntityConverter.convertFromDto(cacheEntryMeta);
 
         recreatingCacheConfiguration.setQueryEntities(recreatingCacheQueryEntities);
 

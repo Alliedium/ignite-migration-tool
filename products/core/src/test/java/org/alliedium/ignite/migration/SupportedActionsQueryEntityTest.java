@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration;
 
+import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
@@ -236,13 +237,13 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
 
         Path source = clientAPI.getAvroTestSetPath();
         Path destination = clientAPI.getAvroMainPath();
-        IgniteObjectStringConverter converter = new IgniteObjectStringConverter();
+        IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter = IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;
+        IIgniteDTOConverter<String, Object> converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
 
         IPatch patch = new IPatch() {
             @Override
             public ICacheMetaData transformMetaData(ICacheMetaData metaData) {
-                Collection<QueryEntity> queryEntities = (Collection<QueryEntity>)
-                        converter.convertFromDto(metaData.getEntryMeta().toString());
+                Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDto(metaData.getEntryMeta().toString());
                 QueryEntity innerQueryEntity = queryEntities.iterator().next();
                 LinkedHashMap<String, String> fields = innerQueryEntity.getFields();
                 fields.remove(fieldName);
