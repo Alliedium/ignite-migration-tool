@@ -1,6 +1,6 @@
 package org.alliedium.ignite.migration;
 
-import org.alliedium.ignite.migration.propeties.PropertyNames;
+import org.alliedium.ignite.migration.properties.PropertyNames;
 import org.alliedium.ignite.migration.test.model.City;
 import org.alliedium.ignite.migration.util.PathCombine;
 import org.apache.ignite.IgniteAtomicLong;

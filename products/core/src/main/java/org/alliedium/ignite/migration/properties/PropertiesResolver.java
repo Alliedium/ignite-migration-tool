@@ -1,4 +1,4 @@
-package org.alliedium.ignite.migration.propeties;
+package org.alliedium.ignite.migration.properties;
 
 import java.io.IOException;
 import java.io.InputStream;

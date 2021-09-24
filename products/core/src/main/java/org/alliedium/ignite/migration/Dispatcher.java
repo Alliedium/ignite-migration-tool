@@ -1,6 +1,6 @@
 package org.alliedium.ignite.migration;
 
-import org.alliedium.ignite.migration.propeties.DefaultProperties;
+import org.alliedium.ignite.migration.properties.DefaultProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

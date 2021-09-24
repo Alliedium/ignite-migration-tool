@@ -6,8 +6,8 @@ import java.nio.file.Paths;
 import java.util.List;
 
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
-import org.alliedium.ignite.migration.propeties.PropertyNames;
-import org.alliedium.ignite.migration.propeties.PropertiesResolver;
+import org.alliedium.ignite.migration.properties.PropertyNames;
+import org.alliedium.ignite.migration.properties.PropertiesResolver;
 import org.apache.commons.cli.*;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
