@@ -9,7 +9,7 @@ import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProv
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteDAO;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
-import org.alliedium.ignite.migration.propeties.PropertiesResolver;
+import org.alliedium.ignite.migration.properties.PropertiesResolver;
 import org.alliedium.ignite.migration.serializer.AvroDeserializer;
 import org.alliedium.ignite.migration.serializer.AvroSerializer;
 import org.alliedium.ignite.migration.serializer.IAvroDeserializer;

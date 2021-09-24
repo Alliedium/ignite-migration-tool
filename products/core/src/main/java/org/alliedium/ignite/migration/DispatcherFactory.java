@@ -1,6 +1,6 @@
 package org.alliedium.ignite.migration;
 
-import org.alliedium.ignite.migration.propeties.PropertiesResolver;
+import org.alliedium.ignite.migration.properties.PropertiesResolver;
 
 public class DispatcherFactory {
 
