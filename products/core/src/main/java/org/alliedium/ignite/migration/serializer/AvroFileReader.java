@@ -41,28 +41,44 @@ public class AvroFileReader implements IAvroFileReader {
         this.filesLocator = new CacheAvroFilesLocator(serializedCachePath);
     }
 
-    public Schema getCacheConfigurationsAvroSchema() throws IOException {
-        Path avroSchemaFile = filesLocator.cacheConfigurationSchemaPath();
-        return new Schema.Parser().parse(avroSchemaFile.toFile());
+    public Schema getCacheConfigurationsAvroSchema() {
+        try {
+            Path avroSchemaFile = filesLocator.cacheConfigurationSchemaPath();
+            return new Schema.Parser().parse(avroSchemaFile.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Schema getCacheDataAvroSchema() throws IOException {
-        Path avroSchemaFile = filesLocator.cacheDataSchemaPath();
-        return new Schema.Parser().parse(avroSchemaFile.toFile());
+    public Schema getCacheDataAvroSchema() {
+        try {
+            Path avroSchemaFile = filesLocator.cacheDataSchemaPath();
+            return new Schema.Parser().parse(avroSchemaFile.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public String getCacheConfiguration() throws IOException {
+    public String getCacheConfiguration() {
         Schema cacheConfigurationsAvroSchema = getCacheConfigurationsAvroSchema();
         Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
-        GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
-        return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME).toString();
+        try {
+            GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
+            return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public String getCacheEntryMeta() throws IOException {
+    public String getCacheEntryMeta() {
         Schema cacheConfigurationsAvroSchema = getCacheConfigurationsAvroSchema();
         Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
-        GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
-        return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME).toString();
+        try {
+            GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
+            return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void distributeAtomicsLongData(IDispatcher<Map.Entry<String, Long>> atomicsLongDispatcher) throws IOException {
