@@ -1,9 +1,10 @@
 package org.alliedium.ignite.migration.patches;
 
-import org.alliedium.ignite.migration.patchtools.*;
-import org.alliedium.ignite.migration.dto.ICacheData;
-import org.alliedium.ignite.migration.dto.ICacheMetaData;
+import com.alliedium.ignite.migration.patchtools.*;
+import org.alliedium.ignite.migration.demotools.CacheNames;
 import org.alliedium.ignite.migration.test.TestDirectories;
+import org.alliedium.ignite.migration.util.PathCombine;
+import org.apache.beam.sdk.values.Row;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -15,42 +16,11 @@ import java.util.*;
  * This patch adds a field to first cache and removes another field from second cache.
  * Any other cache are ignored by this patch.
  */
-public class AlterCachesDemoPatch implements IPatch {
+public class AlterCachesDemoPatch {
 
-    private static final String fieldNameToAdd = "age";
-    private static final String fieldNameToRemove = "population";
     private static final Random random = new Random();
 
-    @Override
-    public ICacheMetaData transformMetaData(ICacheMetaData cacheMetaData) {
-        if (cacheMetaData.getCacheName().equals(CacheNames.FIRST)) {
-            return new MetaDataTransformer(cacheMetaData)
-                    .addFieldType(fieldNameToAdd, Integer.class).build();
-        }
-        if (cacheMetaData.getCacheName().equals(CacheNames.SECOND)) {
-            return new MetaDataTransformer(cacheMetaData)
-                    .removeFieldType(fieldNameToRemove).build();
-        }
-
-        // do nothing for other caches
-        return cacheMetaData;
-    }
-
-    @Override
-    public ICacheData transformData(ICacheData cacheData) {
-        if (cacheData.getCacheName().equals(CacheNames.FIRST)) {
-            return new CacheDataTransformer(cacheData)
-                    .addField(fieldNameToAdd, random.nextInt()).build();
-        }
-        if (cacheData.getCacheName().equals(CacheNames.SECOND)) {
-            return new CacheDataTransformer(cacheData)
-                    .removeField(fieldNameToRemove).build();
-        }
-
-        return new CacheDataTransformer(cacheData).convertFieldsToAvro().build();
-    }
-
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         // resolve source and destination folders
         TestDirectories testDirectories = new TestDirectories();
         Path sourcePath = testDirectories.getAvroTestSetPath();
@@ -60,13 +30,35 @@ public class AlterCachesDemoPatch implements IPatch {
             destinationPath = Paths.get(args[1]);
         }
 
-        // create an instance of patch
-        IPatch patch = new AlterCachesDemoPatch();
+        PathCombine rootDirectory = new PathCombine(sourcePath);
+        PathCombine destinationDirectory = new PathCombine(destinationPath);
+        PatchContext context = new PatchContext(rootDirectory, destinationDirectory);
+        context.prepare();
 
-        // provide source. destination and patch to patch processor
-        PatchProcessor processor = new PatchProcessor(sourcePath, destinationPath, patch);
+        Util.patchCachesWhichEndWith(context, CacheNames.FIRST, cachePath -> {
+            TransformAction<TransformOutput> action = new SelectAction(context)
+                    .fields("key", "name", "district", "population")
+                    .from(cachePath);
+            action = new CopyFieldAction(action)
+                    .copyField("population", "age");
+            action = new MapAction(action)
+                    .map(row ->
+                            Row.fromRow(row)
+                                    .withFieldValue("age", random.nextInt())
+                                    .build());
+            String cacheName = cachePath.substring(cachePath.lastIndexOf("/"));
+            new Writer(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
+        });
 
-        // start processor
-        processor.process();
+        Util.patchCachesWhichEndWith(context, CacheNames.SECOND, cachePath -> {
+            TransformAction<TransformOutput> action = new SelectAction(context)
+                    .fields("key", "name", "district")
+                    .from(cachePath);
+            String cacheName = cachePath.substring(cachePath.lastIndexOf("/"));
+            new Writer(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
+        });
+
+        context.getPipeline().run().waitUntilFinish();
+        context.copyAllNotTouchedFilesToOutput();
     }
 }

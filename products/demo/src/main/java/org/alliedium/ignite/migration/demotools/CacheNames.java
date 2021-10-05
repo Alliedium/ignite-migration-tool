@@ -1,4 +1,4 @@
-package org.alliedium.ignite.migration.patchtools;
+package org.alliedium.ignite.migration.demotools;
 
 public interface CacheNames {
     String FIRST = "first";
