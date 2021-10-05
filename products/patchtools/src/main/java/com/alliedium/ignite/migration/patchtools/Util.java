@@ -99,7 +99,7 @@ public class Util {
         return set.stream().anyMatch(i -> i.equalsIgnoreCase(name));
     }
 
-    static void patchCachesWhichEndWith(PatchContext context, String cachesEndWith, Consumer<String> patch) {
+    public static void patchCachesWhichEndWith(PatchContext context, String cachesEndWith, Consumer<String> patch) {
         List<String> cachePaths = context.selectCachePathsWhichEndWith(cachesEndWith);
         AtomicInteger counter = new AtomicInteger();
         cachePaths.forEach(cachePath -> {

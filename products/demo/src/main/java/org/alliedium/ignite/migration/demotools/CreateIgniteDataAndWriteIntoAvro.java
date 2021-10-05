@@ -1,4 +1,4 @@
-package org.alliedium.ignite.migration.patchtools;
+package org.alliedium.ignite.migration.demotools;
 
 import org.alliedium.ignite.migration.Controller;
 import org.alliedium.ignite.migration.IgniteConfigLoader;

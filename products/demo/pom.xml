@@ -61,6 +61,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.alliedium.ignite.migration</groupId>
+            <artifactId>patchtools</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jul-to-slf4j</artifactId>
         </dependency>
@@ -87,7 +93,7 @@
                   <archive>
                     <manifest>
                       <addClasspath>true</addClasspath>
-                      <mainClass>org.alliedium.ignite.migration.patchtools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                      <mainClass>org.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
                     </manifest>
                   </archive>
                   <descriptorRefs>
@@ -103,7 +109,7 @@
                 <archive>
                   <manifest>
                     <addClasspath>true</addClasspath>
-                    <mainClass>org.alliedium.ignite.migration.patchtools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                    <mainClass>org.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
                   </manifest>
                 </archive>
               </configuration>
