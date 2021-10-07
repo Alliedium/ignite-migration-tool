@@ -6,7 +6,8 @@ COPY pom.xml /appl/
 
 # exclude modules which are not needed from parent pom.xml
 RUN sed '/igniteactivator/d' /appl/pom.xml > /appl/pom_1.xml
-RUN sed '/demo/d' /appl/pom_1.xml > /appl/pom.xml
+RUN sed '/demo/d' /appl/pom_1.xml > /appl/pom_2.xml
+RUN sed '/patchtools/d' /appl/pom_2.xml > /appl/pom.xml
 
 COPY ./test/ /appl/test/
 COPY ./core/src /appl/core/src/

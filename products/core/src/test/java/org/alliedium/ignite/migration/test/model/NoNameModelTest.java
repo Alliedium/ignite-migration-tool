@@ -27,7 +27,7 @@ public class NoNameModelTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        List<NoNameModel> noNameModels = createCacheAndFillWithData(cacheConfiguration,
+        List<NoNameModel> noNameModels = clientAPI.createCacheAndFillWithData(cacheConfiguration,
                 () -> new NoNameModel("hello world".getBytes(), new Timestamp(System.currentTimeMillis())), 10);
 
         IgniteCache<Integer, NoNameModel> igniteCache = ignite.cache(cacheName);
