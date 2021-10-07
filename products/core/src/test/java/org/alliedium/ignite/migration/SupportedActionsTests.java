@@ -62,7 +62,7 @@ public class SupportedActionsTests extends ClientIgniteBaseTest {
         CacheConfiguration<Integer, City> configuration = clientAPI.createTestCityCacheConfiguration(cacheName);
         configuration.setDataRegionName(dataRegionName);
 
-        List<City> cities = createCacheAndFillWithData(configuration,
+        List<City> cities = clientAPI.createCacheAndFillWithData(configuration,
                 () -> new City("testCity", "testDistrict", 0), 10);
 
         Controller controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);

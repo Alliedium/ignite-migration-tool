@@ -2,22 +2,18 @@ package org.alliedium.ignite.migration;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
-import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
-import org.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;
-import org.alliedium.ignite.migration.dao.dtobuilder.EntryMetaBuilder;
-import org.alliedium.ignite.migration.dao.dtobuilder.IDTOBuilder;
-import org.alliedium.ignite.migration.dto.*;
-import org.alliedium.ignite.migration.patchtools.IPatch;
-import org.alliedium.ignite.migration.patchtools.PatchProcessor;
+import org.alliedium.ignite.migration.serializer.AvroFileReader;
+import org.alliedium.ignite.migration.serializer.AvroFileWriter;
+import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
 import org.alliedium.ignite.migration.test.model.PartialField;
 import org.alliedium.ignite.migration.test.model.PartialFieldBinarylizable;
+import org.alliedium.ignite.migration.util.PathCombine;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
@@ -31,14 +27,8 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
     private Controller controller;
 
     @BeforeMethod
-    public void supportedActionsQueryEntityBefore() throws IOException {
+    public void supportedActionsQueryEntityBefore() {
         controller = new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY);
-        clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
-    }
-
-    @AfterMethod
-    public void supportedActionsQueryEntityAfter() throws IOException {
-        clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
     }
 
     /**
@@ -65,7 +55,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        createCacheAndFillWithData(cacheConfiguration,
+        clientAPI.createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialField("testName", "testType", "testVal"), 10);
 
         controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
@@ -80,7 +70,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
      * @throws IOException
      */
     @Test
-    public void partialQueryEntitiesDeserializeTest() throws IOException {
+    public void partialQueryEntitiesDeserializeTest() {
         String cacheName = "partialQueryEntitiesDeserializeTest";
         QueryEntity queryEntity = createStandardQueryEntity();
 
@@ -89,14 +79,11 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
 
         clientAPI.clearIgniteAndCheckIgniteIsEmpty();
 
-        clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
+        removeFieldFromSerializedQueryEntity(cacheConfiguration, "value");
 
-        patchSerializedMetaDataRemoveFieldFromQueryEntity(cacheConfiguration, "value");
-
-        controller.deserializeDataFromAvro(clientAPI.getAvroMainPath());
+        controller.deserializeDataFromAvro(clientAPI.getAvroTestSetPath());
 
         clientAPI.assertIgniteCacheEqualsList(partialFields, cacheName);
-        clientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
     }
 
     /**
@@ -115,14 +102,13 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         clientAPI.clearIgniteAndCheckIgniteIsEmpty();
 
         removeFieldFromQueryEntityIgnite(cacheConfiguration, fieldName);
+        removeFieldFromSerializedQueryEntity(cacheConfiguration, fieldName);
 
         cacheConfiguration.setName(cacheNameSecond);
 
         ignite.createCache(cacheConfiguration);
 
-        patchSerializedMetaDataRemoveFieldFromQueryEntity(cacheConfiguration, fieldName);
-
-        controller.deserializeDataFromAvro(clientAPI.getAvroMainPath());
+        controller.deserializeDataFromAvro(clientAPI.getAvroTestSetPath());
 
         QueryEntity updatedQueryEntity = (QueryEntity) ignite.cache(cacheNameSecond).getConfiguration(CacheConfiguration.class)
                 .getQueryEntities().iterator().next();
@@ -155,7 +141,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        List<PartialFieldBinarylizable> partialFields = createCacheAndFillWithData(cacheConfiguration,
+        List<PartialFieldBinarylizable> partialFields = clientAPI.createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialFieldBinarylizable("testName", "testType", "testVal", "testConsumer"), 10);
 
         controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
@@ -189,7 +175,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
         cacheConfiguration.setName(cacheName);
 
-        createCacheAndFillWithData(cacheConfiguration,
+        clientAPI.createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialFieldBinarylizable("testName", "testType", "testVal", "testConsumer"), 10);
 
         controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
@@ -221,7 +207,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
     }
 
     private List<PartialField> createDataAndSerialize(CacheConfiguration<Integer, PartialField> cacheConfiguration) {
-        List<PartialField> partialFields = createCacheAndFillWithData(cacheConfiguration,
+        List<PartialField> partialFields = clientAPI.createCacheAndFillWithData(cacheConfiguration,
                 () -> new PartialField("testName", "testType", "testVal"), 10);
 
         controller.serializeDataToAvro(clientAPI.getAvroTestSetPath());
@@ -236,48 +222,27 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singleton(queryEntity));
     }
 
-    private void patchSerializedMetaDataRemoveFieldFromQueryEntity(CacheConfiguration<Integer, PartialField> cacheConfiguration,
-                                                                   String fieldName) {
+    private void removeFieldFromSerializedQueryEntity(CacheConfiguration<Integer, PartialField> cacheConfiguration,
+                                                      String fieldName) {
         String cacheName = cacheConfiguration.getName();
-
         Path source = clientAPI.getAvroTestSetPath();
-        Path destination = clientAPI.getAvroMainPath();
         IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter = IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;
         IIgniteDTOConverter<String, Object> converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
 
-        IPatch patch = new IPatch() {
-            @Override
-            public ICacheMetaData transformMetaData(ICacheMetaData metaData) {
-                Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDTO(metaData.getEntryMeta().toString());
-                QueryEntity innerQueryEntity = queryEntities.iterator().next();
-                LinkedHashMap<String, String> fields = innerQueryEntity.getFields();
-                fields.remove(fieldName);
-                innerQueryEntity.setFields(fields);
+        AvroFileReader reader = new AvroFileReader(new PathCombine(source).plus(cacheName));
 
-                IDTOBuilder<ICacheEntryMetaData> cacheEntryMetaBuilder = new EntryMetaBuilder(queryEntities, converter);
-                IDTOBuilder<ICacheConfigurationData> cacheConfigurationBuilder = new CacheConfigBuilder(cacheConfiguration, converter);
+        Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDTO(reader.getCacheEntryMeta());
+        QueryEntity innerQueryEntity = queryEntities.iterator().next();
+        LinkedHashMap<String, String> fields = innerQueryEntity.getFields();
+        fields.remove(fieldName);
+        innerQueryEntity.setFields(fields);
 
-                return new CacheMetaData(cacheName, cacheConfigurationBuilder.build(), cacheEntryMetaBuilder.build());
-            }
-
-            @Override
-            public ICacheData transformData(ICacheData cacheData) {
-                List<ICacheEntryValueField> fields = cacheData.getCacheEntryValue().getFields();
-                List<ICacheEntryValueField> resultFields = new ArrayList<>();
-                fields.forEach(field ->
-                        resultFields.add(new CacheEntryValueField.Builder()
-                                .setName(field.getName())
-                                .setTypeClassName(TypesResolver.toAvroType(field.getTypeClassName()))
-                                .setValue(field.getFieldValue().get())
-                                .build()));
-
-                return new CacheData(cacheName, cacheData.getCacheEntryKey(),
-                        new CacheEntryValue(resultFields));
-            }
-        };
-
-        PatchProcessor processor = new PatchProcessor(source, destination, patch);
-
-        processor.process();
+        cacheConfiguration.setQueryEntities(queryEntities);
+        AvroFileWriter writer = new AvroFileWriter();
+        Path cacheConfigurationsAvroFilePath = new PathCombine(source).plus(AvroFileNames.CACHE_CONFIGURATION_FILENAME).getPath();
+        writer.writeCacheConfigurationsToFile(
+                reader.getCacheConfigurationsAvroSchema(), cacheConfigurationsAvroFilePath,
+                converter.convertFromEntity(cacheConfiguration),
+                queryEntityConverter.convertFromEntity(queryEntities));
     }
 }

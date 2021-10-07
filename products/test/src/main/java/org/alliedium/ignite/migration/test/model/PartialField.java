@@ -44,4 +44,13 @@ public class PartialField {
         result = 31 * result + (value != null ? value.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "PartialField{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }

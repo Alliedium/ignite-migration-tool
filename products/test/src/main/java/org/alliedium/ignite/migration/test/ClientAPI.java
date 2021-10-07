@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Supplier;
 
 public class ClientAPI {
     private final TestDirectories testDirectories;
@@ -119,6 +120,17 @@ public class ClientAPI {
         for (int itemIndex = 0; itemIndex < list.size(); itemIndex++) {
             assertEquals(list.get(itemIndex), igniteCache.get(itemIndex));
         }
+    }
+
+    public <V> List<V> createCacheAndFillWithData(CacheConfiguration<Integer, V> cacheConfiguration, Supplier<V> factory, int count) {
+        IgniteCache<Integer, V> cache = ignite.createCache(cacheConfiguration);
+        List<V> cacheContent = new ArrayList<>();
+        for (int itemIndex = 0; itemIndex < count; itemIndex++) {
+            cacheContent.add(factory.get());
+            cache.put(itemIndex, cacheContent.get(itemIndex));
+        }
+
+        return cacheContent;
     }
 
     private void assertNull(Object obj) {
