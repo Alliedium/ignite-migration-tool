@@ -1,0 +1,30 @@
+FROM maven:3-jdk-8-slim
+
+ARG WAIT_BEFORE_START_IN_SEC=10
+
+COPY pom.xml /app/pom.xml
+
+# exclude modules which are not needed from parent pom.xml
+RUN sed '/igniteactivator/d' /app/pom.xml > /app/pom_1.xml
+RUN sed '/demo/d' /app/pom_1.xml > /app/pom.xml
+
+COPY ./test/ /app/test/
+COPY ./core/src/main/ /app/core/src/main
+COPY ./core/pom.xml /app/core/pom.xml
+COPY ./patchtools/src /app/patchtools/src
+COPY ./patchtools/pom.xml /app/patchtools/pom.xml
+COPY ./core/config/client.xml /app/config/
+COPY ./core/ignite/config/ignite-log4j.xml /app/ignite/config/
+
+ENV IGNITE_HOST=ignite
+ENV MAVEN_OPTS="-Xms1024m -Xmx2048m -XX:+UseG1GC"
+ENV ADD_JVM_OPTS="-DIGNITE_QUIET=false -Djava.net.preferIPv4Stack=true -DIGNITE_CONFIG_HOME=file:/app/config -DIGNITE_HOME=/app/ignite -DIGNITE_LOG_DIR=/app/logs"
+ENV WAIT_BEFORE_START_IN_SEC=${WAIT_BEFORE_START_IN_SEC}
+
+ENTRYPOINT cd /app/ \
+           && sleep $WAIT_BEFORE_START_IN_SEC \
+           && mkdir -p /test-reports && rm -rf /test-reports/* && chmod 777 -R /test-reports && chmod g+s /test-reports \
+           && mkdir -p /app/logs \
+           && chmod 777 -R /app/logs \
+           && mvn -B $ADD_JVM_OPTS test \
+           && cp -r /app/patchtools/target/./ /test-reports

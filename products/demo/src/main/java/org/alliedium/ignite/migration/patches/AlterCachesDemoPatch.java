@@ -1,7 +1,7 @@
 package org.alliedium.ignite.migration.patches;
 
-import com.alliedium.ignite.migration.patchtools.*;
 import org.alliedium.ignite.migration.demotools.CacheNames;
+import org.alliedium.ignite.migration.patchtools.*;
 import org.alliedium.ignite.migration.test.TestDirectories;
 import org.alliedium.ignite.migration.util.PathCombine;
 import org.apache.beam.sdk.values.Row;
@@ -35,7 +35,7 @@ public class AlterCachesDemoPatch {
         PatchContext context = new PatchContext(rootDirectory, destinationDirectory);
         context.prepare();
 
-        Util.patchCachesWhichEndWith(context, CacheNames.FIRST, cachePath -> {
+        context.patchCachesWhichEndWith(CacheNames.FIRST, cachePath -> {
             TransformAction<TransformOutput> action = new SelectAction(context)
                     .fields("key", "name", "district", "population")
                     .from(cachePath);
@@ -50,7 +50,7 @@ public class AlterCachesDemoPatch {
             new Writer(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
         });
 
-        Util.patchCachesWhichEndWith(context, CacheNames.SECOND, cachePath -> {
+        context.patchCachesWhichEndWith(CacheNames.SECOND, cachePath -> {
             TransformAction<TransformOutput> action = new SelectAction(context)
                     .fields("key", "name", "district")
                     .from(cachePath);
