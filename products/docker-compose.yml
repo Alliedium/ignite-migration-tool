@@ -26,3 +26,13 @@ services:
             - igniteactivator
         volumes:
           - ./core/tests-ignitemigrationtool:/test-reports
+
+    tests_patchtools:
+        build:
+            context: .
+            dockerfile: Dockerfile-patchtools-tests
+        depends_on:
+            - ignite
+            - igniteactivator
+        volumes:
+          - ./patchtools/tests-patchtools:/test-reports
