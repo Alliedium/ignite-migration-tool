@@ -25,6 +25,7 @@ import org.apache.avro.generic.GenericRecord;
 import org.apache.ignite.IgniteAtomicLong;
 import org.apache.ignite.IgniteCache;
 import org.testng.Assert;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 public class AvroFileManagerTest extends ClientIgniteBaseTest {
@@ -112,9 +113,13 @@ public class AvroFileManagerTest extends ClientIgniteBaseTest {
         clientAPI.closeAtomicLongs(atomicLongDataMap);
     }
 
+    /**
+     * Ignored because current ignite migration tool approximately works without query entities
+     */
     @Test(
             expectedExceptions = Exception.class,
             expectedExceptionsMessageRegExp = ".*ignite migration tool does not work without ignite cache query entities.*")
+    @Ignore
     public void migrationToolDoesNotWorkWithoutQueryEntitiesTest() {
         String cacheName = "migrationToolDoesNotWorkWithoutQueryEntitiesTest";
         IgniteCache<Integer, City> igniteCache = ignite.createCache(cacheName);

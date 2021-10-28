@@ -10,6 +10,9 @@ mvn clean package -Dmaven.test.skip=true
 docker rm -f $(docker ps -aq)
 docker-compose up -d --build ignite igniteactivator
 
+# sleep 10 second in order to give time for ignite activator activate ignite cluster
+sleep 10
+
 # collect java options and classpath for demo module
 #
 JAVA_OPT="-DIGNITE_HOME=$(pwd)/core/ignite -DIGNITE_LOG_DIR=$(pwd)/demo/logs \
@@ -39,6 +42,9 @@ executeStep org.alliedium.ignite.migration.patches.AlterCachesDemoPatch ./avro_o
 # start a new Apache Ignite cluster
 #
 docker-compose up -d --build ignite igniteactivator
+
+# sleep 10 second in order to give time for ignite activator activate ignite cluster
+sleep 10
 
 # upload the transformed Avro files to the cluster
 #

@@ -2,6 +2,7 @@ package org.alliedium.ignite.migration.serializer.converters.schemafields;
 
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.alliedium.ignite.migration.serializer.IAvroSchemaBuilder;
+import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
 import org.apache.avro.LogicalTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
@@ -18,9 +19,11 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
  */
 class TimestampAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
 
-    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName) {
+    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta) {
         Schema timestampMilliType = LogicalTypes.timestampMillis().addToSchema(Schema.create(Schema.Type.LONG));
-        fieldAssembler.name(fieldName).doc(TypesResolver.getTypeTimestamp()).type(SchemaBuilder.unionOf().type(timestampMilliType).and().nullType().endUnion()).noDefault();
+        fieldAssembler.name(fieldMeta.getName())
+                .doc(TypesResolver.getTypeTimestamp())
+                .type(SchemaBuilder.unionOf().type(timestampMilliType).and().nullType().endUnion()).noDefault();
     }
 
 }

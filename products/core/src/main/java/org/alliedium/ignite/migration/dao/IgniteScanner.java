@@ -1,23 +1,23 @@
 package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.IDispatcher;
+import org.alliedium.ignite.migration.dao.converters.BinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
-import org.alliedium.ignite.migration.dao.converters.IgniteBinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
+import org.alliedium.ignite.migration.dao.converters.PlainEntryValueWrapper;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
-import org.alliedium.ignite.migration.dao.datamanager.IIgniteCacheFieldMetaBuilder;
-import org.alliedium.ignite.migration.dao.datamanager.IgniteCacheFieldMetaBuilder;
+import org.alliedium.ignite.migration.dao.datamanager.BinaryObjectFieldsInfoResolver;
+import org.alliedium.ignite.migration.dao.datamanager.IBinaryObjectFieldInfoResolver;
 import org.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;
-import org.alliedium.ignite.migration.dao.dtobuilder.CacheKeyBuilder;
 import org.alliedium.ignite.migration.dao.dtobuilder.EntryMetaBuilder;
 import org.alliedium.ignite.migration.dao.dtobuilder.IDTOBuilder;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.alliedium.ignite.migration.dto.*;
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteAtomicLong;
 import org.apache.ignite.binary.BinaryObject;
@@ -105,17 +105,26 @@ public class IgniteScanner implements IIgniteReader {
 
     private void getCacheDataDTO(String cacheName, IIgniteCacheDAO igniteCacheDAO, IDispatcher<ICacheData> cacheDataDispatcher) {
         BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
-        IIgniteCacheFieldMetaBuilder cacheFieldMetaBuilder = new IgniteCacheFieldMetaBuilder(cacheBinaryObject, igniteCacheDAO.getCacheQueryEntities());
-        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new IgniteBinaryObjectConverter(cacheFieldMetaBuilder.getFieldsMetaData());
+        IBinaryObjectFieldInfoResolver cacheFieldMetaBuilder = new BinaryObjectFieldsInfoResolver(cacheBinaryObject);
+        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new BinaryObjectConverter(cacheFieldMetaBuilder.resolveFieldsInfo());
 
-        ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
-
-        igniteCacheDAO.getBinaryCache().withKeepBinary().query(scanQuery).forEach(entry -> {
-            ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(entry.getKey(), converter).build();
-            BinaryObject binaryObject = entry.getValue();
-            ICacheEntryValue cacheValueDTO = cacheValueConverter.convertFromEntity(binaryObject);
-
-            cacheDataDispatcher.publish(new CacheData(cacheName, cacheKeyDTO, cacheValueDTO));
-        });
+        Object anyKey = igniteCacheDAO.getAnyKey();
+        if (anyKey instanceof BinaryObject) {
+            IBinaryObjectFieldInfoResolver keyFieldsResolver = new BinaryObjectFieldsInfoResolver((BinaryObject) anyKey);
+            IIgniteDTOConverter<ICacheEntryValue, BinaryObject> keyConverter = new BinaryObjectConverter(keyFieldsResolver.resolveFieldsInfo());
+            ScanQuery<BinaryObject, BinaryObject> scanQuery = new ScanQuery<>();
+            igniteCacheDAO.getBinaryCache().withKeepBinary().query(scanQuery).forEach(entry -> {
+                ICacheEntryValue key = keyConverter.convertFromEntity(entry.getKey());
+                ICacheEntryValue val = cacheValueConverter.convertFromEntity(entry.getValue());
+                cacheDataDispatcher.publish(new CacheData(cacheName, key, val));
+            });
+        } else {
+            ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
+            igniteCacheDAO.getBinaryCache().query(scanQuery).forEach(entry -> {
+                ICacheEntryValue key = PlainEntryValueWrapper.wrap(entry.getKey(), FieldNames.KEY_FIELD_NAME);
+                ICacheEntryValue val = cacheValueConverter.convertFromEntity(entry.getValue());
+                cacheDataDispatcher.publish(new CacheData(cacheName, key, val));
+            });
+        }
     }
 }

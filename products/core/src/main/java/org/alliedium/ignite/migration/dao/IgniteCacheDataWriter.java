@@ -1,23 +1,18 @@
 package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
-import org.alliedium.ignite.migration.dao.converters.IgniteBinaryObjectConverter;
+import org.alliedium.ignite.migration.dao.converters.BinaryObjectConverter;
+import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteCacheDAO;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
+import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.ignite.Ignite;
-import org.apache.ignite.IgniteCache;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.transactions.Transaction;
 
-import java.util.AbstractMap;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import static org.apache.ignite.transactions.TransactionConcurrency.PESSIMISTIC;
-import static org.apache.ignite.transactions.TransactionIsolation.REPEATABLE_READ;
 
 public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
 
@@ -35,8 +30,7 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
 
         if (cacheNeedsToBeRestored(data.getCacheName())) {
             IgniteCacheDAO igniteCacheDAO = getCacheDAO(data.getCacheName());
-            String igniteCacheValueType = igniteCacheDAO.getCacheValueType();
-            Map.Entry<Object, BinaryObject> cacheData = getCacheDataForInsert(ignite, data, igniteCacheValueType);
+            Map.Entry<Object, BinaryObject> cacheData = getCacheDataForInsert(ignite, data, igniteCacheDAO);
 
             binaryStreamers.get(data.getCacheName())
                     .addData(cacheData.getKey(), cacheData.getValue());
@@ -55,12 +49,28 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
         return cacheDAOMap.get(cacheName);
     }
 
-    private Map.Entry<Object, BinaryObject> getCacheDataForInsert(Ignite ignite, ICacheData cacheData, String cacheValueType) {
-        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> binaryObjectFromConverter = new IgniteBinaryObjectConverter(ignite, cacheValueType);
-        BinaryObject binaryObjectFromEntryValue = binaryObjectFromConverter.convertFromDto(cacheData.getCacheEntryValue());
-        String cacheEntryKeyString = cacheData.getCacheEntryKey().toString();
+    private Map.Entry<Object, BinaryObject> getCacheDataForInsert(Ignite ignite, ICacheData cacheData, IIgniteCacheDAO cacheDAO) {
+        String cacheValueType = cacheDAO.getCacheValueType();
+        String cacheKeyType = cacheDAO.getCacheKeyType();
+        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> valConverter = new BinaryObjectConverter(ignite, cacheValueType);
+        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> keyConverter = new BinaryObjectConverter(ignite, cacheKeyType);
+        BinaryObject value = valConverter.convertFromDTO(cacheData.getCacheEntryValue());
+        Object key = parseKey(cacheData.getCacheEntryKey(), keyConverter);
 
-        return new AbstractMap.SimpleEntry<>(cacheKeyConverter.convertFromDto(cacheEntryKeyString), binaryObjectFromEntryValue);
+        return new AbstractMap.SimpleEntry<>(key, value);
+    }
+
+    private Object parseKey(ICacheEntryValue key, IIgniteDTOConverter<ICacheEntryValue, BinaryObject> binaryObjectConverter) {
+        List<String> keyFieldNames = key.getFieldNames();
+
+        if (keyFieldNames.size() == 1 && keyFieldNames.get(0).equals(FieldNames.KEY_FIELD_NAME)) {
+            Optional<Object> optional = key.getField(FieldNames.KEY_FIELD_NAME).getFieldValue();
+            // an object can have null value, that's why we return null here, anyway this is strange for key
+            // todo: figure out more soft way
+            return optional.orElse(null);
+        }
+
+        return binaryObjectConverter.convertFromDTO(key);
     }
 
     private void waitForCacheCreation(String cacheName) {

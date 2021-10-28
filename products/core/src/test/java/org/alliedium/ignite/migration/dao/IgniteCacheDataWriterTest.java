@@ -2,16 +2,13 @@ package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.ClientIgniteBaseTest;
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
-import org.alliedium.ignite.migration.dao.converters.IgniteBinaryObjectConverter;
+import org.alliedium.ignite.migration.dao.converters.BinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
+import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteCacheDAO;
-import org.alliedium.ignite.migration.dao.datamanager.IIgniteCacheFieldMetaBuilder;
-import org.alliedium.ignite.migration.dao.datamanager.IgniteCacheFieldMetaBuilder;
-import org.alliedium.ignite.migration.dao.dtobuilder.CacheKeyBuilder;
-import org.alliedium.ignite.migration.dto.CacheData;
-import org.alliedium.ignite.migration.dto.ICacheData;
-import org.alliedium.ignite.migration.dto.ICacheEntryKey;
-import org.alliedium.ignite.migration.dto.ICacheEntryValue;
+import org.alliedium.ignite.migration.dao.datamanager.IBinaryObjectFieldInfoResolver;
+import org.alliedium.ignite.migration.dao.datamanager.BinaryObjectFieldsInfoResolver;
+import org.alliedium.ignite.migration.dto.*;
 import org.alliedium.ignite.migration.test.model.City;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
@@ -21,12 +18,10 @@ import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.testng.asserts.Assertion;
-import org.testng.asserts.IAssert;
 
 import javax.cache.Cache;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
@@ -76,7 +71,16 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
             prepareCacheEntryValue();
         }
 
-        ICacheEntryKey cacheKeyDTO = new CacheKeyBuilder(cityIndex, converter).build();
+        List<ICacheEntryValueField> cacheEntryValueDTOFields = new ArrayList<>();
+        CacheEntryValueField field = new CacheEntryValueField.Builder()
+                .setName("key")
+                .setTypeClassName(TypesResolver.toAvroType(Integer.class.getName()))
+                .setValue(cityIndex)
+                .build();
+        cacheEntryValueDTOFields.add(field);
+
+        ICacheEntryValue cacheKeyDTO = new CacheEntryValue(cacheEntryValueDTOFields);
+
         return new CacheData(cacheName, cacheKeyDTO, cacheValueDTO);
     }
 
@@ -85,8 +89,8 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
         IgniteCacheDAO igniteCacheDAO = new IgniteCacheDAO(ignite, cacheName);
         BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
-        IIgniteCacheFieldMetaBuilder cacheFieldMetaBuilder = new IgniteCacheFieldMetaBuilder(cacheBinaryObject, igniteCacheDAO.getCacheQueryEntities());
-        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new IgniteBinaryObjectConverter(cacheFieldMetaBuilder.getFieldsMetaData());
+        IBinaryObjectFieldInfoResolver cacheFieldMetaBuilder = new BinaryObjectFieldsInfoResolver(cacheBinaryObject);
+        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new BinaryObjectConverter(cacheFieldMetaBuilder.resolveFieldsInfo());
 
         ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
         for (Cache.Entry<Object, BinaryObject> entry : cache.withKeepBinary().query(scanQuery)) {

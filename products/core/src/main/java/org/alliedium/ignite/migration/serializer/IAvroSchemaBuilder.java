@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.serializer;
 
+import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMetaContainer;
 import java.util.List;
 
@@ -15,7 +16,9 @@ import org.apache.avro.Schema;
  */
 public interface IAvroSchemaBuilder {
 
-    Schema getCacheDataAvroSchema(List<String> cacheValueFieldNamesList, ICacheFieldMetaContainer converterContainer);
+    Schema getCacheDataAvroSchema(Schema keySchema, List<String> fieldNames, ICacheFieldMetaContainer converterContainer);
+
+    Schema getSchemaForFields(List<String> fieldNames, ICacheFieldMetaContainer converterContainer);
 
     Schema getCacheConfigurationsAvroSchema();
 

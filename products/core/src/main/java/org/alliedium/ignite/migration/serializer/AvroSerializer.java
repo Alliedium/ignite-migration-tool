@@ -62,18 +62,25 @@ public class AvroSerializer implements ISerializer {
 
     @Override
     public CacheDataWriter prepareWriter(ICacheData cacheData, PathCombine cacheRelatedPath) {
-        ICacheFieldMetaContainer cacheFieldAvroMetaContainer = new CacheFieldMetaContainer(cacheData.getCacheEntryValue());
-        List<String> cacheValueDTOFieldNamesList = cacheData.getCacheEntryValue().getFieldNamesList();
+        ICacheFieldMetaContainer valFieldAvroMetaContainer = new CacheFieldMetaContainer(cacheData.getCacheEntryValue());
+        ICacheFieldMetaContainer keyFieldAvroMetaContainer = new CacheFieldMetaContainer(cacheData.getCacheEntryKey());
 
-        Schema cacheDataAvroSchema = schemaBuilder.getCacheDataAvroSchema(cacheValueDTOFieldNamesList, cacheFieldAvroMetaContainer);
+        Schema keyAvroSchema = schemaBuilder.getSchemaForFields(
+                cacheData.getCacheEntryKey().getFieldNames(), keyFieldAvroMetaContainer);
+        Schema entryAvroSchema = schemaBuilder.getCacheDataAvroSchema(keyAvroSchema,
+                cacheData.getCacheEntryValue().getFieldNames(), valFieldAvroMetaContainer);
+
         Path cacheDataAvroFilePath = cacheRelatedPath.plus(AvroFileNames.CACHE_DATA_FILENAME).getPath();
         Path cacheDataAvroSchemaFilePath = cacheRelatedPath.plus(AvroFileNames.SCHEMA_FOR_CACHE_DATA_FILENAME).getPath();
 
-        avroFileWriter.writeAvroSchemaToFile(cacheDataAvroSchema, cacheDataAvroSchemaFilePath);
+        avroFileWriter.writeAvroSchemaToFile(entryAvroSchema, cacheDataAvroSchemaFilePath);
 
-        DataFileWriter<GenericRecord> dataFileWriter = avroFileWriter.prepareFileWriter(cacheDataAvroSchema, cacheDataAvroFilePath);
+        DataFileWriter<GenericRecord> dataFileWriter = avroFileWriter.prepareFileWriter(entryAvroSchema, cacheDataAvroFilePath);
 
-        return new CacheDataWriter(dataFileWriter, cacheDataAvroSchema, cacheFieldAvroMetaContainer);
+        return new CacheDataWriter.Builder()
+                .setDataFileWriter(dataFileWriter)
+                .setCacheDataAvroSchema(entryAvroSchema)
+                .build();
     }
 
     private AtomicDataWriter prepareAtomicWriter(PathCombine rootSerializationPath, IAvroSchemaBuilder schemaBuilder) {

@@ -15,14 +15,14 @@ public class CacheEntryValue implements ICacheEntryValue {
 
     private final Map<String, ICacheEntryValueField> valueFieldNameToObjectMap;
 
-    public CacheEntryValue(List<ICacheEntryValueField> cacheEntryValueDTOFieldList) {
-        this.valueFieldNameToObjectMap = cacheEntryValueDTOFieldList.stream()
-            .collect(Collectors.toMap(ICacheEntryValueField::getName, ICacheEntryValueDTOField -> ICacheEntryValueDTOField, (u, v) -> {
+    public CacheEntryValue(List<ICacheEntryValueField> cacheEntryValueFieldList) {
+        this.valueFieldNameToObjectMap = cacheEntryValueFieldList.stream()
+            .collect(Collectors.toMap(ICacheEntryValueField::getName, ICacheEntryValueField -> ICacheEntryValueField, (u, v) -> {
                 throw new IllegalStateException(String.format("Duplicate fieldName %s", u));
             }, LinkedHashMap::new));
     }
 
-    public List<String> getFieldNamesList() {
+    public List<String> getFieldNames() {
         return new ArrayList<>(valueFieldNameToObjectMap.keySet());
     }
 

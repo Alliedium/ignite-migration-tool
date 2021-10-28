@@ -2,9 +2,9 @@ package org.alliedium.ignite.migration.serializer;
 
 import org.alliedium.ignite.migration.IDataWriter;
 import org.alliedium.ignite.migration.dto.ICacheData;
-import org.alliedium.ignite.migration.dto.ICacheEntryKey;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
-import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMetaContainer;
+import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
+import org.alliedium.ignite.migration.serializer.converters.datatypes.AvroDerivedTypeConverterFactory;
 import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
@@ -17,24 +17,23 @@ import java.util.Optional;
 
 public class CacheDataWriter implements IDataWriter<ICacheData> {
 
+    /**
+     * avro data file writer
+     */
     private final DataFileWriter<GenericRecord> dataFileWriter;
-    private final Schema cacheDataAvroSchema;
-    private final ICacheFieldMetaContainer cacheFieldAvroMetaContainer;
 
     /**
-     * @param dataFileWriter avro data file writer
-     * @param cacheDataAvroSchema pre-defined avro schema, which describes how should current cache data be stored in avro
-     * @param cacheFieldAvroMetaContainer meta-data for each of the fields from cacheData
+     * pre-defined avro schema, which describes how should current cache data be stored in avro
      */
-    public CacheDataWriter(DataFileWriter<GenericRecord> dataFileWriter, Schema cacheDataAvroSchema,
-                           ICacheFieldMetaContainer cacheFieldAvroMetaContainer) {
-        this.dataFileWriter = dataFileWriter;
-        this.cacheDataAvroSchema = cacheDataAvroSchema;
-        this.cacheFieldAvroMetaContainer = cacheFieldAvroMetaContainer;
+    private final Schema schema;
+
+    private CacheDataWriter(Builder builder) {
+        this.dataFileWriter = builder.dataFileWriter;
+        this.schema = builder.cacheDataAvroSchema;
     }
 
     /**
-     * Serializes cache data and writes it intoavro file.
+     * Serializes cache data and writes it into avro file.
      *
      * @see <a href="http://avro.apache.org/docs/current/gettingstartedjava.html#Serializing+and+deserializing+without+code+generation">Avro serialization short guide</a>
      * @param cacheData cache data from processing DTO
@@ -43,36 +42,80 @@ public class CacheDataWriter implements IDataWriter<ICacheData> {
     public void write(ICacheData cacheData) {
         try {
             dataFileWriter.append(genericRecordFromCacheDataEntry(cacheData.getCacheEntryKey(),
-                    cacheData.getCacheEntryValue(), cacheDataAvroSchema, cacheFieldAvroMetaContainer));
+                    cacheData.getCacheEntryValue()));
         } catch (IOException e) {
             throw new IllegalStateException("Failed to write cache data into avro file");
         }
     }
 
-    private GenericRecord genericRecordFromCacheDataEntry(ICacheEntryKey cacheKey, ICacheEntryValue cacheValue,
-                                                          Schema avroSchema, ICacheFieldMetaContainer fieldTypeConvertersContainer) {
-        GenericRecord genericRecord = new GenericData.Record(avroSchema);
+    private GenericRecord genericRecordFromCacheDataEntry(ICacheEntryValue cacheKey, ICacheEntryValue cacheValue) {
+        GenericRecord genericRecord = generateGenericRecord(schema, cacheValue);
 
-        genericRecord.put(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME, cacheKey.toString());
+        genericRecord.put(FieldNames.KEY_FIELD_NAME, generateGenericRecord(
+                schema.getField(FieldNames.KEY_FIELD_NAME).schema(), cacheKey));
 
-        List<String> cacheValueFieldNameList = cacheValue.getFieldNamesList();
+        return genericRecord;
+    }
+
+    private GenericRecord generateGenericRecord(Schema schema, ICacheEntryValue value) {
+        GenericRecord genericRecord = new GenericData.Record(schema);
+
+        List<String> cacheValueFieldNameList = value.getFieldNames();
         for (String fieldName : cacheValueFieldNameList) {
-            Optional<Object> cacheValueFieldValue = cacheValue.getField(fieldName).getFieldValue().getValue();
-            if (!cacheValueFieldValue.isPresent()) {
-                genericRecord.put(fieldName, null);
-            }
-            else {
-                genericRecord.put(fieldName, fieldTypeConvertersContainer.getFieldTypeMeta(fieldName)
-                        .getAvroDerivedTypeConverter().convertForAvro(cacheValueFieldValue.get())
-                );
-            }
+            Object resultVal = getFieldObject(value.getField(fieldName), schema);
+            genericRecord.put(fieldName, resultVal);
         }
 
         return genericRecord;
     }
 
+    /**
+     *
+     * @param field - field from which object should be constructed
+     * @return object constructed from field, can return null cause the field value itself can be null
+     */
+    private Object getFieldObject(ICacheEntryValueField field, Schema schema) {
+        String fieldName = field.getName();
+        Optional<Object> fieldValue = field.getFieldValue();
+        if (field.hasNested()) {
+            Schema nestedSchema = schema.getField(fieldName).schema();
+            GenericRecord nestedRecord = new GenericData.Record(nestedSchema);
+            field.getNested().forEach(nested -> {
+                nestedRecord.put(nested.getName(), getFieldObject(nested, nestedSchema));
+            });
+            return nestedRecord;
+        }
+
+        if (fieldValue.isPresent()) {
+            return AvroDerivedTypeConverterFactory.get(schema.getField(fieldName))
+                    .convertForAvro(fieldValue.get());
+        }
+
+        // we return null because the value itself of any field can be null
+        return null;
+    }
+
     @Override
     public void close() throws Exception {
         dataFileWriter.close();
+    }
+
+    public static class Builder {
+        private DataFileWriter<GenericRecord> dataFileWriter;
+        private Schema cacheDataAvroSchema;
+
+        public Builder setDataFileWriter(DataFileWriter<GenericRecord> dataFileWriter) {
+            this.dataFileWriter = dataFileWriter;
+            return this;
+        }
+
+        public Builder setCacheDataAvroSchema(Schema cacheDataAvroSchema) {
+            this.cacheDataAvroSchema = cacheDataAvroSchema;
+            return this;
+        }
+
+        public CacheDataWriter build() {
+            return new CacheDataWriter(this);
+        }
     }
 }

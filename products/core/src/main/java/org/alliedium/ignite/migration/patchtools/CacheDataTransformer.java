@@ -18,7 +18,11 @@ public class CacheDataTransformer implements ITransformer<ICacheData> {
     public CacheDataTransformer addField(String name, Object val) {
         // todo: here could go types check, cause only basic types work
         List<ICacheEntryValueField> fields = cacheData.getCacheEntryValue().getFields();
-        fields.add(new CacheEntryValueField(name, val.getClass().getName(), new CacheEntryValueFieldValue(val)));
+        fields.add(new CacheEntryValueField.Builder()
+                .setName(name)
+                .setTypeClassName(val.getClass().getName())
+                .setValue(val)
+                .build());
         List<ICacheEntryValueField> resultFields = resolveFieldTypesForAvro(fields);
 
         return new CacheDataTransformer(new CacheData(cacheData.getCacheName(), cacheData.getCacheEntryKey(),
@@ -47,8 +51,11 @@ public class CacheDataTransformer implements ITransformer<ICacheData> {
     private List<ICacheEntryValueField> resolveFieldTypesForAvro(List<ICacheEntryValueField> fields) {
         List<ICacheEntryValueField> resultFields = new ArrayList<>();
         fields.forEach(field ->
-                resultFields.add(new CacheEntryValueField(field.getName(),
-                        TypesResolver.toAvroType(field.getTypeClassName()), field.getFieldValue())));
+                resultFields.add(new CacheEntryValueField.Builder()
+                        .setName(field.getName())
+                        .setTypeClassName(TypesResolver.toAvroType(field.getTypeClassName()))
+                        .setValue(field.getFieldValue().get())
+                        .build()));
         return resultFields;
     }
 

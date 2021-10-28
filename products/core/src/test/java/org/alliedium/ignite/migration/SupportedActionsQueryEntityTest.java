@@ -19,6 +19,7 @@ import org.apache.ignite.configuration.CacheConfiguration;
 import org.testng.Assert;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -46,7 +47,9 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
      * All fields of a cache should have query entities in order to be available for serialization.
      * This is so cause ignite migration tool highly relies on fields types to properly serialize and
      * deserialize data.
+     * since this change tool is approximately able to work without query entities for fields
      */
+    @Ignore
     @Test(
             expectedExceptions = Exception.class,
             expectedExceptionsMessageRegExp = ".*Query entity for field \\[value\\] was not found.*")
@@ -168,7 +171,9 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
      * This test is bad path test and shows that tool will fail in case fields mentioned in methods
      * {@link org.apache.ignite.binary.Binarylizable#readBinary} and {@link org.apache.ignite.binary.Binarylizable#writeBinary}
      * do not have query entities.
+     * since this change tool is approximately able to work without query entities for fields
      */
+    @Ignore
     @Test(
             expectedExceptions = Exception.class,
             expectedExceptionsMessageRegExp = ".*Query entity for field \\[specialValue\\] was not found.*")
@@ -243,7 +248,7 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         IPatch patch = new IPatch() {
             @Override
             public ICacheMetaData transformMetaData(ICacheMetaData metaData) {
-                Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDto(metaData.getEntryMeta().toString());
+                Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDTO(metaData.getEntryMeta().toString());
                 QueryEntity innerQueryEntity = queryEntities.iterator().next();
                 LinkedHashMap<String, String> fields = innerQueryEntity.getFields();
                 fields.remove(fieldName);
@@ -260,8 +265,11 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
                 List<ICacheEntryValueField> fields = cacheData.getCacheEntryValue().getFields();
                 List<ICacheEntryValueField> resultFields = new ArrayList<>();
                 fields.forEach(field ->
-                        resultFields.add(new CacheEntryValueField(field.getName(),
-                                TypesResolver.toAvroType(field.getTypeClassName()), field.getFieldValue())));
+                        resultFields.add(new CacheEntryValueField.Builder()
+                                .setName(field.getName())
+                                .setTypeClassName(TypesResolver.toAvroType(field.getTypeClassName()))
+                                .setValue(field.getFieldValue().get())
+                                .build()));
 
                 return new CacheData(cacheName, cacheData.getCacheEntryKey(),
                         new CacheEntryValue(resultFields));

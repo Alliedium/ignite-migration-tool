@@ -1,6 +1,7 @@
 package org.alliedium.ignite.migration.serializer.converters.datatypes;
 
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
+import org.apache.avro.Schema;
 
 public class AvroDerivedTypeConverterFactory {
 
@@ -13,5 +14,9 @@ public class AvroDerivedTypeConverterFactory {
         }
 
         return new AvroGenericConverter();
+    }
+
+    public static IAvroDerivedTypeConverter get(Schema.Field field) {
+        return get(field.doc());
     }
 }

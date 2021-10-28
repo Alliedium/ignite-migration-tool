@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface ICacheEntryValue {
 
-    List<String> getFieldNamesList();
+    List<String> getFieldNames();
 
     ICacheEntryValueField getField(String fieldName);
 
