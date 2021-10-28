@@ -27,12 +27,24 @@ public class TestUtil {
     private static final String fieldType = TypesResolver.toAvroType(Integer.class.getName());
 
     public static ICacheData createTestCacheData(String cacheName) {
-        CacheEntryKey key = new CacheEntryKey("key");
         List<ICacheEntryValueField> cacheEntryValueDTOFields = new ArrayList<>();
-        CacheEntryValueField field = new CacheEntryValueField(fieldName, fieldType,
-                new CacheEntryValueFieldValue(random.nextInt()));
+        CacheEntryValueField field = new CacheEntryValueField.Builder()
+                .setName(GENERIC_RECORD_KEY_FIELD_NAME)
+                .setTypeClassName(TypesResolver.toAvroType(String.class.getName()))
+                .setValue(GENERIC_RECORD_KEY_FIELD_NAME)
+                .build();
+        cacheEntryValueDTOFields.add(field);
+
+        CacheEntryValue key = new CacheEntryValue(cacheEntryValueDTOFields);
+        cacheEntryValueDTOFields = new ArrayList<>();
+        field = new CacheEntryValueField.Builder()
+                .setName(fieldName)
+                .setTypeClassName(fieldType)
+                .setValue(random.nextInt())
+                .build();
         cacheEntryValueDTOFields.add(field);
         CacheEntryValue val = new CacheEntryValue(cacheEntryValueDTOFields);
+
         return new CacheData(cacheName, key, val);
     }
 
@@ -67,7 +79,7 @@ public class TestUtil {
                 areEqual = false;
                 break;
             }
-            else if (!line1.equalsIgnoreCase(line2)) {
+            else if (!line1.equalsIgnoreCase(line2) && !file1.getPath().contains(AvroFileExtensions.AVSC)) {
                 areEqual = false;
                 break;
             }

@@ -3,6 +3,7 @@ package org.alliedium.ignite.migration.serializer.converters.schemafields;
 import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
 import org.alliedium.ignite.migration.serializer.converters.CacheFieldMeta;
 import org.alliedium.ignite.migration.serializer.IAvroSchemaBuilder;
+import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
 
@@ -16,6 +17,6 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
  */
 public interface IAvroSchemaFieldAssembler {
 
-    void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName);
+    void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta);
 
 }

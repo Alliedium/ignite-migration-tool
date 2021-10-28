@@ -7,11 +7,7 @@ import org.alliedium.ignite.migration.serializer.converters.datatypes.IAvroDeriv
 import org.alliedium.ignite.migration.serializer.converters.schemafields.IAvroSchemaFieldAssembler;
 import org.alliedium.ignite.migration.serializer.converters.schemafields.SchemaFieldAssemblerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.*;
 
 /**
  * Unit contains meta-data as {@link ICacheFieldMeta} for each separate {@link ICacheEntryValueField}.
@@ -20,27 +16,49 @@ import java.util.stream.Collectors;
  */
 public class CacheFieldMetaContainer implements ICacheFieldMetaContainer {
 
-    private final Map<String, ICacheFieldMeta> fieldTypeConverterContainersMap;
+    private final Map<String, ICacheFieldMeta> fieldsAvroInfoContainer;
 
     public CacheFieldMetaContainer(ICacheEntryValue cacheEntryValue) {
-        List<ICacheFieldMeta> cacheFieldAvroMetaList = new ArrayList<>();
+        fieldsAvroInfoContainer = new HashMap<>();
 
-        List<String> cacheValueFieldNameList = cacheEntryValue.getFieldNamesList();
+        List<String> fieldNamesList = cacheEntryValue.getFieldNames();
         //TODO: to add a mechanism which checks whether provided DTO can be serialized to avro (all the incoming value types are supported or custom converters are available)
-        for (String cacheValueFieldName : cacheValueFieldNameList) {
-            String cacheValueFieldTypeClassName = cacheEntryValue.getField(cacheValueFieldName).getTypeClassName();
-            IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(cacheValueFieldTypeClassName);
-            IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(cacheValueFieldTypeClassName);
-            ICacheFieldMeta cacheFieldAvroMeta = new CacheFieldMeta(cacheValueFieldName, avroSchemaFieldAssembler, avroDerivedTypeConverter);
-            cacheFieldAvroMetaList.add(cacheFieldAvroMeta);
-        }
+        for (String fieldName : fieldNamesList) {
+            if (fieldsAvroInfoContainer.containsKey(fieldName)) {
+                throw new IllegalStateException(String.format("Duplicate fieldName %s", fieldName));
+            }
 
-        this.fieldTypeConverterContainersMap = cacheFieldAvroMetaList.stream().collect(Collectors.toMap(ICacheFieldMeta::getName, ICacheFieldMeta -> ICacheFieldMeta, (u, v) -> {
-            throw new IllegalStateException(String.format("Duplicate fieldName %s", u));
-        }, HashMap::new));
+            fieldsAvroInfoContainer.put(fieldName, createFieldMeta(cacheEntryValue.getField(fieldName)));
+        }
+    }
+
+    private CacheFieldMeta createFieldMeta(ICacheEntryValueField field) {
+        String fieldName = field.getName();
+        String fieldAvroType = field.getTypeClassName();
+        if (field.hasNested()) {
+            List<ICacheFieldMeta> nested = new ArrayList<>();
+            field.getNested().forEach(val -> nested.add(createFieldMeta(val)));
+            IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(fieldAvroType, nested);
+            IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(fieldAvroType);
+            return new CacheFieldMeta.Builder()
+                    .setFieldName(fieldName)
+                    .setAvroSchemaFieldAssembler(avroSchemaFieldAssembler)
+                    .setAvroDerivedTypeConverter(avroDerivedTypeConverter)
+                    .setNested(nested)
+                    .setFieldType(fieldAvroType)
+                    .build();
+        }
+        IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(fieldAvroType);
+        IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(fieldAvroType);
+        return new CacheFieldMeta.Builder()
+                .setFieldName(fieldName)
+                .setAvroSchemaFieldAssembler(avroSchemaFieldAssembler)
+                .setAvroDerivedTypeConverter(avroDerivedTypeConverter)
+                .setFieldType(fieldAvroType)
+                .build();
     }
 
     public ICacheFieldMeta getFieldTypeMeta(String fieldName) {
-        return this.fieldTypeConverterContainersMap.get(fieldName);
+        return this.fieldsAvroInfoContainer.get(fieldName);
     }
 }

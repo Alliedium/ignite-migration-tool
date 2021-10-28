@@ -1,9 +1,12 @@
 package org.alliedium.ignite.migration.serializer;
 
+import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMetaContainer;
-import java.util.List;
+
+import java.util.*;
 
 import org.alliedium.ignite.migration.serializer.utils.FieldNames;
+import org.alliedium.ignite.migration.util.UniqueKey;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
@@ -18,55 +21,70 @@ import org.apache.avro.SchemaBuilder;
 public class AvroSchemaBuilder implements IAvroSchemaBuilder {
 
     private static final String CACHE_CONFIGURATIONS_RECORD_NAME = "CacheConfigurations";
-    private static final String RECORDS_NAMESPACE = "test";
+    private static final String CONFIG_NAMESPACE = "configs";
+    private static final String ATOMIC_NAMESPACE = "atomics";
     private static final String ATOMIC_STRUCTURE_RECORD_NAME = "AtomicStructure";
 
     private static final String CACHE_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
     private static final String CACHE_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
-    private static final String CACHE_DATA_RECORD_NAME = "CacheEntry";
-    private static final String CACHE_DATA_RECORD_NAMESPACE = "test";
 
     private static final String IGNITE_ATOMIC_LONG_NAME_FIELD_NAME = "igniteAtomicLongName";
     private static final String IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME = "igniteAtomicLongValue";
 
     @Override
     public Schema getCacheConfigurationsAvroSchema() {
-        SchemaBuilder.FieldAssembler<Schema> cacheConfigurationsAvroSchemaAssembly = SchemaBuilder.record(CACHE_CONFIGURATIONS_RECORD_NAME)
-                .namespace(RECORDS_NAMESPACE).fields();
+        SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.record(CACHE_CONFIGURATIONS_RECORD_NAME)
+                .namespace(CONFIG_NAMESPACE).fields();
 
-        cacheConfigurationsAvroSchemaAssembly.name(CACHE_CONFIGURATIONS_FIELD_NAME).type().stringType().noDefault();
-        cacheConfigurationsAvroSchemaAssembly.name(CACHE_QUERY_ENTITIES_FIELD_NAME).type().stringType().noDefault();
+        fieldAssembler.name(CACHE_CONFIGURATIONS_FIELD_NAME).type().stringType().noDefault();
+        fieldAssembler.name(CACHE_QUERY_ENTITIES_FIELD_NAME).type().stringType().noDefault();
 
-        return cacheConfigurationsAvroSchemaAssembly.endRecord();
+        return fieldAssembler.endRecord();
     }
 
     @Override
     public Schema getAtomicStructureSchema() {
-        SchemaBuilder.FieldAssembler<Schema> atomicStructureFieldAssembler = SchemaBuilder.record(ATOMIC_STRUCTURE_RECORD_NAME)
-                .namespace(RECORDS_NAMESPACE).fields();
-        atomicStructureFieldAssembler
+        SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.record(ATOMIC_STRUCTURE_RECORD_NAME)
+                .namespace(ATOMIC_NAMESPACE).fields();
+        fieldAssembler
                 .name(IGNITE_ATOMIC_LONG_NAME_FIELD_NAME)
                 .type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
-        atomicStructureFieldAssembler
+        fieldAssembler
                 .name(IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME)
                 .type(SchemaBuilder.unionOf().longType().and().nullType().endUnion()).noDefault();
 
-        return atomicStructureFieldAssembler.endRecord();
+        return fieldAssembler.endRecord();
     }
 
     @Override
-    public Schema getCacheDataAvroSchema(List<String> cacheValueFieldNamesList, ICacheFieldMetaContainer converterContainer) {
-        final SchemaBuilder.FieldAssembler<Schema> cacheDataAvroSchemaAssembly = SchemaBuilder.record(CACHE_DATA_RECORD_NAME)
-            .namespace(CACHE_DATA_RECORD_NAMESPACE).fields();
+    public Schema getCacheDataAvroSchema(Schema keySchema, List<String> fieldNames, ICacheFieldMetaContainer converterContainer) {
+        final SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder
+                .record(UniqueKey.generate())
+                .fields();
 
-        cacheDataAvroSchemaAssembly.name(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME)
-                .type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
+        fieldAssembler.name(FieldNames.KEY_FIELD_NAME).type(keySchema).noDefault();
 
-        for (String cacheValueFieldName : cacheValueFieldNamesList) {
-            converterContainer.getFieldTypeMeta(cacheValueFieldName).getAvroSchemaFieldAssembler().assembleAvroSchemaField(cacheDataAvroSchemaAssembly, cacheValueFieldName);
-        }
+        setAvroFields(fieldNames, converterContainer, fieldAssembler);
 
-        return cacheDataAvroSchemaAssembly.endRecord();
+        return fieldAssembler.endRecord();
     }
 
+    @Override
+    public Schema getSchemaForFields(List<String> fieldNames, ICacheFieldMetaContainer converterContainer) {
+        final SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder
+                .record(UniqueKey.generate())
+                .fields();
+
+        setAvroFields(fieldNames, converterContainer, fieldAssembler);
+
+        return fieldAssembler.endRecord();
+    }
+
+    private void setAvroFields(List<String> fieldNames, ICacheFieldMetaContainer converterContainer,
+                                                               SchemaBuilder.FieldAssembler<Schema> fieldAssembler) {
+        for (String fieldName : fieldNames) {
+            ICacheFieldMeta fieldMeta = converterContainer.getFieldTypeMeta(fieldName);
+            fieldMeta.getAvroSchemaFieldAssembler().assembleAvroSchemaField(fieldAssembler, fieldMeta);
+        }
+    }
 }

@@ -1,7 +1,6 @@
 package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
-import org.alliedium.ignite.migration.dao.converters.IgniteBinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
 import org.apache.ignite.Ignite;
@@ -31,9 +30,9 @@ public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> 
 
     private void recreateIgniteCache(Ignite ignite, ICacheMetaData cacheMetaData) {
         String cacheConfigurationDTO = cacheMetaData.getConfiguration().toString();
-        CacheConfiguration<Object, BinaryObject> recreatingCacheConfiguration = configurationConverter.convertFromDto(cacheConfigurationDTO);
+        CacheConfiguration<Object, BinaryObject> recreatingCacheConfiguration = configurationConverter.convertFromDTO(cacheConfigurationDTO);
         String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
-        Collection<QueryEntity> recreatingCacheQueryEntities = queryEntityConverter.convertFromDto(cacheEntryMeta);
+        Collection<QueryEntity> recreatingCacheQueryEntities = queryEntityConverter.convertFromDTO(cacheEntryMeta);
 
         recreatingCacheConfiguration.setQueryEntities(recreatingCacheQueryEntities);
 

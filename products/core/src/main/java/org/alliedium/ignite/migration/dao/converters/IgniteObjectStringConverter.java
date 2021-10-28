@@ -22,7 +22,7 @@ public class IgniteObjectStringConverter<T> implements IIgniteDTOConverter<Strin
         return Utils.serializeObjectToXML(entity);
     }
 
-    public T convertFromDto(String dto) {
+    public T convertFromDTO(String dto) {
         return Utils.deserializeFromXML(dto);
     }
 

@@ -1,6 +1,7 @@
 package org.alliedium.ignite.migration.serializer.converters.schemafields;
 
 import org.alliedium.ignite.migration.serializer.IAvroSchemaBuilder;
+import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
@@ -18,8 +19,9 @@ public class GenericAvroSchemaFieldAssembler implements IAvroSchemaFieldAssemble
         this.initialFieldTypeClassName = initialFieldTypeClassName;
     }
 
-    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName) {
-        fieldAssembler.name(fieldName).type(SchemaBuilder.unionOf().type(this.initialFieldTypeClassName.toLowerCase()).and().nullType().endUnion()).noDefault();
+    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta) {
+        fieldAssembler.name(fieldMeta.getName()).type(
+                SchemaBuilder.unionOf().type(this.initialFieldTypeClassName.toLowerCase()).and().nullType().endUnion()).noDefault();
     }
 
 }

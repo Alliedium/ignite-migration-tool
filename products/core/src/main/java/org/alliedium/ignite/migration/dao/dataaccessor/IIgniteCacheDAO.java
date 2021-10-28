@@ -16,10 +16,14 @@ public interface IIgniteCacheDAO {
 
     BinaryObject getAnyValue();
 
+    Object getAnyKey();
+
     CacheConfiguration<?, ?> getCacheConfiguration();
 
     Collection<QueryEntity> getCacheQueryEntities();
 
     String getCacheValueType();
+
+    String getCacheKeyType();
 
 }

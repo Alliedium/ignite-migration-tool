@@ -11,6 +11,6 @@ public interface IIgniteDTOConverter<T, U> {
 
     T convertFromEntity(U entity);
 
-    U convertFromDto(T dto);
+    U convertFromDTO(T dto);
 
 }

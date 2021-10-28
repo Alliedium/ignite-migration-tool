@@ -61,9 +61,9 @@ public class MetaDataTransformer implements IMetaTransformer<ICacheMetaData> {
     private MetaDataTransformer modifyMetaData(Consumer<QueryEntity> queryEntityModifier) {
         // todo: add check for class, because not all classes are supported
         CacheConfiguration<Object, BinaryObject> cacheConfiguration =
-                cacheConfigConverter.convertFromDto(cacheMetaData.getConfiguration().toString());
+                cacheConfigConverter.convertFromDTO(cacheMetaData.getConfiguration().toString());
         String cacheEntryMeta = cacheMetaData.getEntryMeta().toString();
-        Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDto(cacheEntryMeta);
+        Collection<QueryEntity> queryEntities = queryEntityConverter.convertFromDTO(cacheEntryMeta);
 
         queryEntities.forEach(queryEntityModifier);
 

@@ -1,6 +1,7 @@
 package org.alliedium.ignite.migration.serializer.converters.schemafields;
 
 import org.alliedium.ignite.migration.serializer.IAvroSchemaBuilder;
+import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 import org.apache.avro.SchemaBuilder.FieldAssembler;
@@ -11,8 +12,9 @@ import org.apache.avro.SchemaBuilder.FieldAssembler;
  */
 class IntegerAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
 
-    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, String fieldName) {
-        fieldAssembler.name(fieldName).type(SchemaBuilder.unionOf().intType().and().nullType().endUnion()).noDefault();
+    public void assembleAvroSchemaField(FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta) {
+        fieldAssembler.name(fieldMeta.getName())
+                .type(SchemaBuilder.unionOf().intType().and().nullType().endUnion()).noDefault();
     }
 
 }

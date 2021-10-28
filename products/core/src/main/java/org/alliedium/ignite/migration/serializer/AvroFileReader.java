@@ -3,13 +3,12 @@ package org.alliedium.ignite.migration.serializer;
 import org.alliedium.ignite.migration.IDispatcher;
 import org.alliedium.ignite.migration.dto.*;
 import org.alliedium.ignite.migration.serializer.converters.AvroFieldMetaContainer;
-import org.alliedium.ignite.migration.serializer.converters.AvroGenericRecordToConverter;
+import org.alliedium.ignite.migration.serializer.converters.AvroToGenericRecordConverter;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
 import org.alliedium.ignite.migration.serializer.utils.FieldNames;
@@ -115,16 +114,15 @@ public class AvroFileReader implements IAvroFileReader {
             Schema cacheDataAvroSchema = getCacheDataAvroSchema();
             DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(cacheDataAvroSchema);
             DataFileReader<GenericRecord> dataFileReader = new DataFileReader<>(cacheDataFilePath.toFile(), datumReader);
-            AvroGenericRecordToConverter avroGenericRecordToConverter = new AvroGenericRecordToConverter(fieldsTypes);
-            AvroFieldMetaContainer avroFieldMetaContainer = new AvroFieldMetaContainer(cacheDataAvroSchema);
+            AvroToGenericRecordConverter avroToGenericRecordConverter = new AvroToGenericRecordConverter(fieldsTypes);
 
-            GenericRecord cacheDataRecord = null;
+            GenericRecord record = null;
             while (dataFileReader.hasNext()) {
-                cacheDataRecord = dataFileReader.next(cacheDataRecord);
-                ICacheEntryKey cacheEntryKey = new CacheEntryKey(
-                        cacheDataRecord.get(FieldNames.AVRO_GENERIC_RECORD_KEY_FIELD_NAME).toString());
-                ICacheEntryValue cacheEntryValue = avroGenericRecordToConverter
-                        .getCacheEntryValue(cacheDataRecord, avroFieldMetaContainer);
+                record = dataFileReader.next(record);
+                ICacheEntryValue cacheEntryKey = avroToGenericRecordConverter
+                        .getCacheEntryValue((GenericRecord) record.get(FieldNames.KEY_FIELD_NAME));
+                ICacheEntryValue cacheEntryValue = avroToGenericRecordConverter.getCacheEntryValue(
+                        record, Collections.singleton(FieldNames.KEY_FIELD_NAME));
 
                 cacheDataDispatcher.publish(new CacheData(cacheName, cacheEntryKey, cacheEntryValue));
             }

@@ -21,13 +21,12 @@ public class AvroFieldMetaContainer {
     private final Map<String, IAvroDerivedTypeConverter> fieldNameToContainerMap;
 
     public AvroFieldMetaContainer(Schema avroSchema) {
-        Map<String, IAvroDerivedTypeConverter> fieldNameToContainerMap = new HashMap<>();
+        fieldNameToContainerMap = new HashMap<>();
         for (Field avroSchemaField : avroSchema.getFields()) {
             String fieldName = avroSchemaField.name();
-            IAvroDerivedTypeConverter avroTypeConverter = AvroDerivedTypeConverterFactory.get(avroSchemaField.doc());
+            IAvroDerivedTypeConverter avroTypeConverter = AvroDerivedTypeConverterFactory.get(avroSchemaField);
             fieldNameToContainerMap.put(fieldName, avroTypeConverter);
         }
-        this.fieldNameToContainerMap = fieldNameToContainerMap;
     }
 
     public IAvroDerivedTypeConverter getAvroFieldConverter(String avroFieldName) {

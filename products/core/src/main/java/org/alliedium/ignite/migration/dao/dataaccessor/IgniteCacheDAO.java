@@ -36,6 +36,16 @@ public class IgniteCacheDAO implements IIgniteCacheDAO {
         throw new IllegalStateException("provided ignite cache is empty");
     }
 
+    @Override
+    public Object getAnyKey() {
+        Iterator<Cache.Entry<Object, BinaryObject>> iterator = binaryCache.iterator();
+        if (iterator.hasNext()) {
+            return iterator.next().getKey();
+        }
+
+        throw new IllegalStateException("provided ignite cache is empty");
+    }
+
     @SuppressWarnings("unchecked")
     public CacheConfiguration<Object, BinaryObject> getCacheConfiguration() {
         return this.binaryCache.getConfiguration(CacheConfiguration.class);
@@ -49,6 +59,16 @@ public class IgniteCacheDAO implements IIgniteCacheDAO {
         Iterator<QueryEntity> queryEntityIterator = getCacheQueryEntities().iterator();
         if (queryEntityIterator.hasNext()) {
             return queryEntityIterator.next().findValueType();
+        }
+
+        throw new IllegalStateException("ignite migration tool does not work without ignite cache query entities");
+    }
+
+    @Override
+    public String getCacheKeyType() {
+        Iterator<QueryEntity> queryEntityIterator = getCacheQueryEntities().iterator();
+        if (queryEntityIterator.hasNext()) {
+            return queryEntityIterator.next().findKeyType();
         }
 
         throw new IllegalStateException("ignite migration tool does not work without ignite cache query entities");
