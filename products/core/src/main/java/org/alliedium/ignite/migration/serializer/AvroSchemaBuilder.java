@@ -28,9 +28,6 @@ public class AvroSchemaBuilder implements IAvroSchemaBuilder {
     private static final String CACHE_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
     private static final String CACHE_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
 
-    private static final String IGNITE_ATOMIC_LONG_NAME_FIELD_NAME = "igniteAtomicLongName";
-    private static final String IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME = "igniteAtomicLongValue";
-
     @Override
     public Schema getCacheConfigurationsAvroSchema() {
         SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.record(CACHE_CONFIGURATIONS_RECORD_NAME)
@@ -47,10 +44,10 @@ public class AvroSchemaBuilder implements IAvroSchemaBuilder {
         SchemaBuilder.FieldAssembler<Schema> fieldAssembler = SchemaBuilder.record(ATOMIC_STRUCTURE_RECORD_NAME)
                 .namespace(ATOMIC_NAMESPACE).fields();
         fieldAssembler
-                .name(IGNITE_ATOMIC_LONG_NAME_FIELD_NAME)
+                .name(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME)
                 .type(SchemaBuilder.unionOf().stringType().and().nullType().endUnion()).noDefault();
         fieldAssembler
-                .name(IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME)
+                .name(FieldNames.IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME)
                 .type(SchemaBuilder.unionOf().longType().and().nullType().endUnion()).noDefault();
 
         return fieldAssembler.endRecord();

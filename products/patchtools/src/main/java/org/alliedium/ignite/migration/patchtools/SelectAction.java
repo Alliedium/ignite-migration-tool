@@ -58,9 +58,9 @@ public class SelectAction implements TransformAction<TransformOutput> {
         Collection<QueryEntity> queryEntities;
 
         cacheConfiguration = cacheConfigConverter
-                .convertFromDto(cacheComponent.getAvroFileReader().getCacheConfiguration());
+                .convertFromDTO(cacheComponent.getAvroFileReader().getCacheConfiguration());
         queryEntities = queryEntityConverter
-                .convertFromDto(cacheComponent.getAvroFileReader().getCacheEntryMeta());
+                .convertFromDTO(cacheComponent.getAvroFileReader().getCacheEntryMeta());
 
         queryEntities = queryEntities.stream()
                 .map(queryEntity -> Util.filterQueryEntityFields(queryEntity, fields))
