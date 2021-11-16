@@ -11,7 +11,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class BaseTest {
 
@@ -37,8 +36,8 @@ public class BaseTest {
 
     private void beforeAndAfter() throws IOException {
         if (clientAPI != null) {
-            ClientAPI.deleteDirectoryRecursively(clientAPI.getAvroTestSetPath());
-            ClientAPI.deleteDirectoryRecursively(clientAPI.getAvroMainPath());
+            ClientAPI.deleteDirectoryRecursively(source.getPath());
+            ClientAPI.deleteDirectoryRecursively(destination.getPath());
         }
     }
 

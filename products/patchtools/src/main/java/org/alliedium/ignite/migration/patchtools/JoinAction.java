@@ -43,7 +43,7 @@ public class JoinAction implements TransformAction<TransformOutput> {
         String tableName2 = "input2";
 
         PCollection<Row> joined = PCollectionTuple.of(tableName1, output1.getPCollection(), tableName2, output2.getPCollection())
-                .apply(CoGroup.join(tableName1, CoGroup.By.fieldNames(on).withOptionalParticipation())
+                .apply(CoGroup.join(tableName1, CoGroup.By.fieldNames(on))//.withOptionalParticipation())
                         .join(tableName2, CoGroup.By.fieldNames(on))
                         .crossProductJoin());
 

@@ -15,6 +15,5 @@ public class RowElementsProcessor extends DoFn<Row, Row> implements Serializable
     @ProcessElement
     public void process(ProcessContext c) {
         c.output(rowConsumer.apply(c.element()));
-        //c.output(c.element());
     }
 }
