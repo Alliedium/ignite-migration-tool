@@ -12,23 +12,19 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class RenameFieldAction implements TransformAction<TransformOutput> {
-    private final TransformAction<TransformOutput> select;
-    private String oldFieldName;
-    private String newFieldName;
+    private final TransformAction<TransformOutput> action;
+    private final String oldFieldName;
+    private final String newFieldName;
 
-    public RenameFieldAction(TransformAction<TransformOutput> select) {
-        this.select = select;
-    }
-
-    public RenameFieldAction renameField(String oldFieldName, String newFieldName) {
-        this.newFieldName = newFieldName;
-        this.oldFieldName = oldFieldName;
-        return this;
+    private RenameFieldAction(Builder builder) {
+        action = builder.action;
+        oldFieldName = builder.oldFieldName;
+        newFieldName = builder.newFieldName;
     }
 
     @Override
     public TransformOutput execute() {
-        TransformOutput out = select.execute();
+        TransformOutput out = action.execute();
         Set<String> fields = Arrays.stream(out.getFields()).collect(Collectors.toSet());
         fields.remove(oldFieldName);
         fields.add(newFieldName);
@@ -65,5 +61,33 @@ public class RenameFieldAction implements TransformAction<TransformOutput> {
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
                 .build();
+    }
+
+    public static class Builder {
+        private TransformAction<TransformOutput> action;
+        private String oldFieldName;
+        private String newFieldName;
+
+        public Builder action(TransformAction<TransformOutput> action) {
+            this.action = action;
+            return this;
+        }
+
+        public Builder renameField(String oldFieldName, String newFieldName) {
+            this.newFieldName = newFieldName;
+            this.oldFieldName = oldFieldName;
+            return this;
+        }
+
+        private void validate() {
+            Objects.requireNonNull(action, "parent action is null");
+            Objects.requireNonNull(newFieldName, "new field name not set");
+            Objects.requireNonNull(oldFieldName, "old field name not set");
+        }
+
+        public RenameFieldAction build() {
+            validate();
+            return new RenameFieldAction(this);
+        }
     }
 }

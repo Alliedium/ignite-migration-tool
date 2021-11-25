@@ -12,6 +12,7 @@ import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -24,23 +25,14 @@ public class SelectAction implements TransformAction<TransformOutput> {
     private static final IIgniteDTOConverter<String, CacheConfiguration<Object, BinaryObject>> cacheConfigConverter =
             IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER;
 
-    private String[] fields;
-    private String from;
+    private final String[] fields;
+    private final String from;
     private final PatchContext context;
 
-    public SelectAction(PatchContext context) {
-        this.context = context;
-    }
-
-    public SelectAction fields(String... fields) {
-        Set<String> fieldsSet = Stream.of(fields).collect(Collectors.toSet());
-        this.fields = fieldsSet.toArray(new String[0]);
-        return this;
-    }
-
-    public SelectAction from(String from) {
-        this.from = from;
-        return this;
+    private SelectAction(Builder builder) {
+        context = builder.context;
+        from = builder.from;
+        fields = builder.fields;
     }
 
     public TransformOutput execute() {
@@ -76,5 +68,38 @@ public class SelectAction implements TransformAction<TransformOutput> {
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
                 .build();
+    }
+
+    public static class Builder {
+        private String[] fields;
+        private String from;
+        private PatchContext context;
+
+        public Builder context(PatchContext context) {
+            this.context = context;
+            return this;
+        }
+
+        public Builder fields(String... fields) {
+            Set<String> fieldsSet = Stream.of(fields).collect(Collectors.toSet());
+            this.fields = fieldsSet.toArray(new String[0]);
+            return this;
+        }
+
+        public Builder from(String from) {
+            this.from = from;
+            return this;
+        }
+
+        private void validate() {
+            Objects.requireNonNull(context, "Patch context is not set");
+            Objects.requireNonNull(fields, "no fields set");
+            Objects.requireNonNull(from, "from is not set");
+        }
+
+        public SelectAction build() {
+            validate();
+            return new SelectAction(this);
+        }
     }
 }

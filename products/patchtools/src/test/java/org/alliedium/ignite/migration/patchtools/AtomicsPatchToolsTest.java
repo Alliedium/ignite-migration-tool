@@ -39,26 +39,32 @@ public class AtomicsPatchToolsTest extends BaseTest {
         map.put(atomicName3, (long) 1);
         clientAPI.clearIgniteAndCheckIgniteIsEmpty(map);
 
-        TransformAction<TransformAtomicsOutput> action = new SelectAtomicsAction(context)
-                .from(source.getPath().toString());
-        TransformAction<TransformAtomicsOutput> duplicatedAtomicAction = new MapAtomicsAction(action).map(row -> {
-            String atomicName = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME);
-            return Row.fromRow(row)
-                    .withFieldValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME, atomicName + 1)
-                    .build();
-        });
+        TransformAction<TransformAtomicsOutput> action = new SelectAtomicsAction.Builder()
+                .context(context)
+                .from(source.getPath().toString())
+                .build();
+        TransformAction<TransformAtomicsOutput> duplicatedAtomicAction = new MapAtomicsAction.Builder()
+                .action(action)
+                .map(row -> {
+                    String atomicName = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME);
+                    return Row.fromRow(row)
+                            .withFieldValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME, atomicName + 1)
+                            .build();
+                }).build();
 
-        action = new MapAtomicsAction(action).map(row -> {
-            String atomicName = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME);
-            long val = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME);
-            if (atomicName1.equals(atomicName)) {
-                val = 2;
-                map.put(atomicName, val);
-            }
-            return Row.fromRow(row)
-                    .withFieldValue(FieldNames.IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME, val)
-                    .build();
-        });
+        action = new MapAtomicsAction.Builder()
+                .action(action)
+                .map(row -> {
+                    String atomicName = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_NAME_FIELD_NAME);
+                    long val = row.getValue(FieldNames.IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME);
+                    if (atomicName1.equals(atomicName)) {
+                        val = 2;
+                        map.put(atomicName, val);
+                    }
+                    return Row.fromRow(row)
+                            .withFieldValue(FieldNames.IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME, val)
+                            .build();
+                }).build();
 
         action = new MergeRowsAtomicsAction(action, duplicatedAtomicAction);
         new AtomicsWriter(action).writeTo(destination.getPath().toString());

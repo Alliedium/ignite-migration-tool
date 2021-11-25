@@ -22,16 +22,20 @@ public class MapActionTest extends BaseTest {
         int populationValue = clientAPI.getRandom().nextInt();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district", "population")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            action = new MapAction(action)
+            action = new MapAction.Builder()
+                    .action(action)
                     .map(row -> Row.fromRow(row)
                             .withFieldValue("population", populationValue)
-                            .build());
+                            .build())
+                    .build();
 
-            new Writer(action).writeTo(destination.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destination.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

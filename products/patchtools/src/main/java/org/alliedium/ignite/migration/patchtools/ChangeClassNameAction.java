@@ -5,25 +5,22 @@ import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
 import java.util.Collection;
+import java.util.Objects;
 
 public class ChangeClassNameAction implements TransformAction<TransformOutput> {
-    private final TransformAction<TransformOutput> transformAction;
-    private String fromClassName;
-    private String toClassName;
+    private final TransformAction<TransformOutput> action;
+    private final String fromClassName;
+    private final String toClassName;
 
-    public ChangeClassNameAction(TransformAction<TransformOutput> transformAction) {
-        this.transformAction = transformAction;
-    }
-
-    public ChangeClassNameAction changeClassName(String fromClassName, String toClassName) {
-        this.fromClassName = fromClassName;
-        this.toClassName = toClassName;
-        return this;
+    private ChangeClassNameAction(Builder builder) {
+        this.action = builder.action;
+        this.fromClassName = builder.fromClassName;
+        this.toClassName = builder.toClassName;
     }
 
     @Override
     public TransformOutput execute() {
-        TransformOutput output = transformAction.execute();
+        TransformOutput output = action.execute();
 
         Collection<QueryEntity> queryEntities = output.getQueryEntities();
         queryEntities.forEach(queryEntity -> {
@@ -38,5 +35,33 @@ public class ChangeClassNameAction implements TransformAction<TransformOutput> {
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
                 .build();
+    }
+
+    public static class Builder {
+        private TransformAction<TransformOutput> action;
+        private String fromClassName;
+        private String toClassName;
+
+        public Builder action(TransformAction<TransformOutput> action) {
+            this.action = action;
+            return this;
+        }
+
+        public Builder changeClassName(String fromClassName, String toClassName) {
+            this.fromClassName = fromClassName;
+            this.toClassName = toClassName;
+            return this;
+        }
+
+        private void validate() {
+            Objects.requireNonNull(action, "parent action is null");
+            Objects.requireNonNull(fromClassName, "from class name field is not set");
+            Objects.requireNonNull(toClassName, "to class name field is not set");
+        }
+
+        public ChangeClassNameAction build() {
+            validate();
+            return new ChangeClassNameAction(this);
+        }
     }
 }

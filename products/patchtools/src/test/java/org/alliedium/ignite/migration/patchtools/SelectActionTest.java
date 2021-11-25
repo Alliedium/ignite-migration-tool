@@ -19,11 +19,13 @@ public class SelectActionTest extends BaseTest {
         context.prepare();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            new Writer(action).writeTo(destination.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destination.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

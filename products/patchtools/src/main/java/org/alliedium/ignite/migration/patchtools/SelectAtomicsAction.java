@@ -15,18 +15,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
 public class SelectAtomicsAction implements TransformAction<TransformAtomicsOutput> {
     private final PatchContext context;
-    private String from;
+    private final String from;
 
-    public SelectAtomicsAction(PatchContext context) {
-        this.context = context;
-    }
-
-    public SelectAtomicsAction from(String from) {
-        this.from = from;
-        return this;
+    private SelectAtomicsAction(Builder builder) {
+        context = builder.context;
+        from = builder.from;
     }
 
     @Override
@@ -52,5 +49,30 @@ public class SelectAtomicsAction implements TransformAction<TransformAtomicsOutp
                 .setCoder(RowCoder.of(AvroUtils.toBeamSchema(schema)));
 
         return new TransformAtomicsOutput(rows, schema);
+    }
+
+    public static class Builder {
+        private PatchContext context;
+        private String from;
+
+        public Builder context(PatchContext context) {
+            this.context = context;
+            return this;
+        }
+
+        public Builder from(String from) {
+            this.from = from;
+            return this;
+        }
+
+        private void validate() {
+            Objects.requireNonNull(context, "Patch context is not set");
+            Objects.requireNonNull(from, "from is not set");
+        }
+
+        public SelectAtomicsAction build() {
+            validate();
+            return new SelectAtomicsAction(this);
+        }
     }
 }

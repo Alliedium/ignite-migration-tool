@@ -6,7 +6,7 @@ import org.apache.beam.sdk.schemas.utils.AvroUtils;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.values.Row;
 
-public class BeamRowsToAvroConverter extends DoFn<Row, GenericRecord> {
+class BeamRowsToAvroConverter extends DoFn<Row, GenericRecord> {
 
     private final Schema schema;
 
