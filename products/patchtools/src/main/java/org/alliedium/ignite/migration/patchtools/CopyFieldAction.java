@@ -14,27 +14,20 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class CopyFieldAction implements TransformAction<TransformOutput> {
-    private final TransformAction<TransformOutput> selectAction;
-    private String fieldToCopy;
-    private String newFieldName;
-    private RowElementsProcessor elementsProcessor;
+    private final TransformAction<TransformOutput> action;
+    private final String fieldToCopy;
+    private final String newFieldName;
+    private final RowElementsProcessor rowElementsProcessor;
 
-    public CopyFieldAction(TransformAction<TransformOutput> selectAction) {
-        this.selectAction = selectAction;
-    }
-
-    public CopyFieldAction copyField(String fieldToCopy, String newFieldName) {
-        this.fieldToCopy = fieldToCopy;
-        this.newFieldName = newFieldName;
-        this.elementsProcessor = new RowElementsProcessor(row ->
-                Row.fromRow(row)
-                        .withFieldValue(newFieldName, row.getValue(fieldToCopy))
-                        .build());
-        return this;
+    private CopyFieldAction(Builder builder) {
+        this.action = builder.action;
+        this.fieldToCopy = builder.fieldToCopy;
+        this.newFieldName = builder.newFieldName;
+        this.rowElementsProcessor = builder.rowElementsProcessor;
     }
 
     public TransformOutput execute() {
-        TransformOutput out = selectAction.execute();
+        TransformOutput out = action.execute();
         Set<String> fields = Arrays.stream(out.getFields()).collect(Collectors.toSet());
         fields.add(newFieldName);
 
@@ -60,7 +53,7 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
                 .apply(AddFields.<Row>create()
                         .field(newFieldName, beamSchema.getField(newFieldName).getType()));
         pCollection = pCollection
-                .apply(ParDo.of(elementsProcessor)).setCoder(pCollection.getCoder());
+                .apply(ParDo.of(rowElementsProcessor)).setCoder(pCollection.getCoder());
 
         CacheConfiguration<Object, BinaryObject> cacheConfiguration = out.getCacheConfiguration();
         Collection<QueryEntity> queryEntities = out.getQueryEntities();
@@ -75,5 +68,38 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
                 .setQueryEntities(queryEntities)
                 .setCacheConfiguration(cacheConfiguration)
                 .build();
+    }
+
+    public static class Builder {
+        private TransformAction<TransformOutput> action;
+        private RowElementsProcessor rowElementsProcessor;
+        private String fieldToCopy;
+        private String newFieldName;
+
+        public Builder action(TransformAction<TransformOutput> action) {
+            this.action = action;
+            return this;
+        }
+
+        public Builder copyField(String fieldToCopy, String newFieldName) {
+            this.fieldToCopy = fieldToCopy;
+            this.newFieldName = newFieldName;
+            this.rowElementsProcessor = new RowElementsProcessor(row ->
+                    Row.fromRow(row)
+                            .withFieldValue(newFieldName, row.getValue(fieldToCopy))
+                            .build());
+            return this;
+        }
+
+        private void validate() {
+            Objects.requireNonNull(action, "parent action is null");
+            Objects.requireNonNull(newFieldName, "new field name is not set");
+            Objects.requireNonNull(fieldToCopy, "field to copy is not set");
+        }
+
+        public CopyFieldAction build() {
+            validate();
+            return new CopyFieldAction(this);
+        }
     }
 }

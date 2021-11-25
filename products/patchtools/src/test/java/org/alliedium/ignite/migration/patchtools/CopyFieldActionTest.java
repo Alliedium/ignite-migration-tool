@@ -19,14 +19,18 @@ public class CopyFieldActionTest extends BaseTest {
         context.prepare();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district", "population")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            action = new CopyFieldAction(action)
-                    .copyField("population", "age");
+            action = new CopyFieldAction.Builder()
+                    .action(action)
+                    .copyField("population", "age")
+                    .build();
 
-            new Writer(action).writeTo(destination.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destination.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

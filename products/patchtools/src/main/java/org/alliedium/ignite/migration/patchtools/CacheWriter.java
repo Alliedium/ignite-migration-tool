@@ -20,14 +20,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
-public class Writer {
+public class CacheWriter {
     private static final IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter =
             IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;
     private static final IIgniteDTOConverter<String, CacheConfiguration<Object, BinaryObject>> cacheConfigConverter =
             IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER;
     private final TransformAction<TransformOutput> transformAction;
 
-    public Writer(TransformAction<TransformOutput> transformAction) {
+    public CacheWriter(TransformAction<TransformOutput> transformAction) {
         this.transformAction = transformAction;
     }
 

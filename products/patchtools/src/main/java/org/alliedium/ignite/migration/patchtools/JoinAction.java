@@ -16,28 +16,19 @@ import java.util.stream.Stream;
 import static org.apache.beam.sdk.schemas.transforms.Select.fieldNames;
 
 public class JoinAction implements TransformAction<TransformOutput> {
-    private TransformAction<TransformOutput> s1;
-    private TransformAction<TransformOutput> s2;
-    private String on;
+    private final TransformAction<TransformOutput> first;
+    private final TransformAction<TransformOutput> second;
+    private final String on;
 
-    public JoinAction() {
-    }
-
-    public JoinAction join(TransformAction<TransformOutput> s1,
-                           TransformAction<TransformOutput> s2) {
-        this.s1 = s1;
-        this.s2 = s2;
-        return this;
-    }
-
-    public JoinAction on(String field) {
-        this.on = field;
-        return this;
+    private JoinAction(Builder builder) {
+        this.first = builder.first;
+        this.second = builder.second;
+        this.on = builder.on;
     }
 
     public TransformOutput execute() {
-        TransformOutput output1 = s1.execute();
-        TransformOutput output2 = s2.execute();
+        TransformOutput output1 = first.execute();
+        TransformOutput output2 = second.execute();
 
         String tableName1 = "input1";
         String tableName2 = "input2";
@@ -116,5 +107,33 @@ public class JoinAction implements TransformAction<TransformOutput> {
                 .setQueryEntities(resultQueryEntities)
                 .setCacheConfiguration(cacheConfiguration)
                 .build();
+    }
+
+    public static class Builder {
+        private TransformAction<TransformOutput> first;
+        private TransformAction<TransformOutput> second;
+        private String on;
+
+        public Builder join(TransformAction<TransformOutput> first,
+                               TransformAction<TransformOutput> second) {
+            this.first = first;
+            this.second = second;
+            return this;
+        }
+
+        public Builder on(String field) {
+            this.on = field;
+            return this;
+        }
+
+        public void validate() {
+            Objects.requireNonNull(first, "[Join action] first action should not be null");
+            Objects.requireNonNull(second, "[Join action] second action should not be null");
+            Objects.requireNonNull(on, "[Join action] join field was not provided");
+        }
+
+        public JoinAction build() {
+            return new JoinAction(this);
+        }
     }
 }

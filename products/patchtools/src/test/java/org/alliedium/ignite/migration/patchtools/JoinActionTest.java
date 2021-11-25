@@ -67,27 +67,39 @@ public class JoinActionTest extends BaseTest {
             String fabricatorCachePath = cachePath.substring(0, cachePath.lastIndexOf("/") + 1)
                     + fabricatorCacheName;
 
-            TransformAction<TransformOutput> productAction = new SelectAction(context)
+            TransformAction<TransformOutput> productAction = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "id", "fabricatorId", "name", "price")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            TransformAction<TransformOutput> fabricatorAction = new SelectAction(context)
+            TransformAction<TransformOutput> fabricatorAction = new SelectAction.Builder()
+                    .context(context)
                     .fields("id", "name", "country")
-                    .from(fabricatorCachePath);
+                    .from(fabricatorCachePath)
+                    .build();
 
-            fabricatorAction = new RenameFieldAction(fabricatorAction)
-                    .renameField("id", "fabricatorId");
-            fabricatorAction = new RenameFieldAction(fabricatorAction)
-                    .renameField("name", "fabricatorName");
+            fabricatorAction = new RenameFieldAction.Builder()
+                    .action(fabricatorAction)
+                    .renameField("id", "fabricatorId")
+                    .build();
+            fabricatorAction = new RenameFieldAction.Builder()
+                    .action(fabricatorAction)
+                    .renameField("name", "fabricatorName")
+                    .build();
 
-            TransformAction<TransformOutput> action = new JoinAction()
-                    .join(productAction, fabricatorAction).on("fabricatorId");
+            TransformAction<TransformOutput> action = new JoinAction.Builder()
+                    .join(productAction, fabricatorAction)
+                    .on("fabricatorId")
+                    .build();
 
-            action = new RenameCacheAction(action)
+            action = new RenameCacheAction.Builder()
+                    .action(action)
                     .newTableName("PRODUCTS_FABRICATORS")
-                    .newName(productCacheName + "Fabricator");
+                    .newCacheName(productCacheName + "Fabricator")
+                    .build();
 
-            new Writer(action).writeTo(destination.plus(productCacheName + "Fabricator").getPath().toString());
+            new CacheWriter(action).writeTo(destination.plus(productCacheName + "Fabricator").getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

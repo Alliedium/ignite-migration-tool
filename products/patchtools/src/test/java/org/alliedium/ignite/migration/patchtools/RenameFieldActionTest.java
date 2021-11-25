@@ -3,7 +3,6 @@ package org.alliedium.ignite.migration.patchtools;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.query.ScanQuery;
 import org.testng.Assert;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Method;
@@ -20,13 +19,17 @@ public class RenameFieldActionTest extends BaseTest {
         context.prepare();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district", "population")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            action = new RenameFieldAction(action)
-                    .renameField("population", "maxPopulation");
-            new Writer(action).writeTo(destination.plus(cacheName).getPath().toString());
+            action = new RenameFieldAction.Builder()
+                    .action(action)
+                    .renameField("population", "maxPopulation")
+                    .build();
+            new CacheWriter(action).writeTo(destination.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

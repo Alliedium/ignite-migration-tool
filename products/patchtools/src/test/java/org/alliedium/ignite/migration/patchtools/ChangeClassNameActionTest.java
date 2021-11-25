@@ -20,15 +20,19 @@ public class ChangeClassNameActionTest extends BaseTest {
         context.prepare();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district", "population")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
 
-            action = new ChangeClassNameAction(action)
+            action = new ChangeClassNameAction.Builder()
+                    .action(action)
                     .changeClassName("org.alliedium.ignite.migration.test.model.City",
-                            "org.alliedium.ignite.migration.changed.test.model.City");
+                            "org.alliedium.ignite.migration.changed.test.model.City")
+                    .build();
 
-            new Writer(action).writeTo(destination.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destination.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();

@@ -1,7 +1,5 @@
 package org.alliedium.ignite.migration.patchtools;
 
-import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.cache.query.ScanQuery;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -22,13 +20,17 @@ public class RenameCacheActionTest extends BaseTest {
         context.prepare();
 
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district")
-                    .from(cachePath);
-            action = new RenameCacheAction(action)
-                    .newName(newCacheName)
-                    .newTableName("CITY1");
-            new Writer(action).writeTo(destination.plus(newCacheName).getPath().toString());
+                    .from(cachePath)
+                    .build();
+            action = new RenameCacheAction.Builder()
+                    .action(action)
+                    .newCacheName(newCacheName)
+                    .newTableName("CITY1")
+                    .build();
+            new CacheWriter(action).writeTo(destination.plus(newCacheName).getPath().toString());
             context.markCacheResolved(cacheName);
         });
 

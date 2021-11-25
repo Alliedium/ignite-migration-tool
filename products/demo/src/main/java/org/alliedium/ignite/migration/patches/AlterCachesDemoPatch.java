@@ -36,26 +36,34 @@ public class AlterCachesDemoPatch {
         context.prepare();
 
         context.patchCachesWhichEndWith(CacheNames.FIRST, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district", "population")
-                    .from(cachePath);
-            action = new CopyFieldAction(action)
-                    .copyField("population", "age");
-            action = new MapAction(action)
+                    .from(cachePath)
+                    .build();
+            action = new CopyFieldAction.Builder()
+                    .action(action)
+                    .copyField("population", "age")
+                    .build();
+            action = new MapAction.Builder()
+                    .action(action)
                     .map(row ->
                             Row.fromRow(row)
                                     .withFieldValue("age", random.nextInt())
-                                    .build());
+                                    .build())
+                    .build();
             String cacheName = cachePath.substring(cachePath.lastIndexOf("/"));
-            new Writer(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
         });
 
         context.patchCachesWhichEndWith(CacheNames.SECOND, cachePath -> {
-            TransformAction<TransformOutput> action = new SelectAction(context)
+            TransformAction<TransformOutput> action = new SelectAction.Builder()
+                    .context(context)
                     .fields("key", "name", "district")
-                    .from(cachePath);
+                    .from(cachePath)
+                    .build();
             String cacheName = cachePath.substring(cachePath.lastIndexOf("/"));
-            new Writer(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
+            new CacheWriter(action).writeTo(destinationDirectory.plus(cacheName).getPath().toString());
         });
 
         context.getPipeline().run().waitUntilFinish();
