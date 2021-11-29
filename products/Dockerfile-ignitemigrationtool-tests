@@ -10,6 +10,7 @@ RUN sed '/demo/d' /appl/pom_1.xml > /appl/pom_2.xml
 RUN sed '/patchtools/d' /appl/pom_2.xml > /appl/pom.xml
 
 COPY ./test/ /appl/test/
+COPY ./common/ /appl/common/
 COPY ./core/src /appl/core/src/
 COPY ./core/pom.xml /appl/core/
 COPY ./core/config/client.xml /appl/core/config/

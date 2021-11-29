@@ -1,6 +1,5 @@
 package org.alliedium.ignite.migration;
 
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.test.model.IdContainer;
 import org.alliedium.ignite.migration.test.model.Passport;
 import org.alliedium.ignite.migration.test.model.Person;

@@ -1,5 +1,4 @@
 package org.alliedium.ignite.migration;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.test.model.City;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.configuration.CacheConfiguration;

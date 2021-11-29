@@ -1,8 +1,8 @@
 package org.alliedium.ignite.migration.patchtools;
 
 import org.alliedium.ignite.migration.Controller;
+import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.IgniteConfigLoader;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.test.ClientAPI;
 import org.alliedium.ignite.migration.test.model.City;
 import org.alliedium.ignite.migration.util.PathCombine;

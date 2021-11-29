@@ -1,11 +1,12 @@
 package org.alliedium.ignite.migration.test;
 
+import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
 import org.apache.ignite.Ignite;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class DefaultIgniteAtomicLongNamesProvider {
+public class DefaultIgniteAtomicLongNamesProvider implements IgniteAtomicLongNamesProvider {
 
     private final Ignite ignite;
 

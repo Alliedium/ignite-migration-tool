@@ -2,7 +2,7 @@ package org.alliedium.ignite.migration.test.model;
 
 import org.alliedium.ignite.migration.ClientIgniteBaseTest;
 import org.alliedium.ignite.migration.Controller;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
+import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
