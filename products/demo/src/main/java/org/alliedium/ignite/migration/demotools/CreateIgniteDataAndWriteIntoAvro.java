@@ -2,7 +2,7 @@ package org.alliedium.ignite.migration.demotools;
 
 import org.alliedium.ignite.migration.Controller;
 import org.alliedium.ignite.migration.IgniteConfigLoader;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
+import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.test.ClientAPI;
 
 import java.io.IOException;

@@ -9,6 +9,7 @@ RUN sed '/igniteactivator/d' /app/pom.xml > /app/pom_1.xml
 RUN sed '/demo/d' /app/pom_1.xml > /app/pom.xml
 
 COPY ./test/ /app/test/
+COPY ./common/ /app/common/
 COPY ./core/src/main/ /app/core/src/main
 COPY ./core/pom.xml /app/core/pom.xml
 COPY ./patchtools/src /app/patchtools/src

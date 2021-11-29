@@ -7,7 +7,7 @@ import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter
 import org.alliedium.ignite.migration.dao.converters.PlainEntryValueWrapper;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
+import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.dao.datamanager.BinaryObjectFieldsInfoResolver;
 import org.alliedium.ignite.migration.dao.datamanager.IBinaryObjectFieldInfoResolver;
 import org.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;

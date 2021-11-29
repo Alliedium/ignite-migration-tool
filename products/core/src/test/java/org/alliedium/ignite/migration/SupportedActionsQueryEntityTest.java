@@ -2,7 +2,6 @@ package org.alliedium.ignite.migration;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.serializer.AvroFileReader;
 import org.alliedium.ignite.migration.serializer.AvroFileWriter;
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;

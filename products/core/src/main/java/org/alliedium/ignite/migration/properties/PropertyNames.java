@@ -13,4 +13,5 @@ public interface PropertyNames {
 
     String ATOMIC_LONG_NAMES_PROPERTY = "ignite.atomic.long.names";
     String DISPATCHERS_ELEMENTS_LIMIT = "dispatchers.elements.limit";
+    String ATOMIC_LONG_NAMES_CLASS_PROVIDER = "ignite.atomic.long.names.provider";
 }

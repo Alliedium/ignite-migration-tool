@@ -5,20 +5,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 public class PropertiesResolver {
 
     private final Properties properties;
+    private final Properties systemProperties;
 
-    private PropertiesResolver(Properties properties) {
+    PropertiesResolver(Properties properties) {
         this.properties = properties;
+        this.systemProperties = System.getProperties();
     }
 
-    public List<String> getAtomicLongNamesList() {
+    public List<String> getAtomicLongNames() {
         String atomicLongNames = properties.getProperty(PropertyNames.ATOMIC_LONG_NAMES_PROPERTY);
         if (atomicLongNames == null) {
             return new ArrayList<>();
@@ -36,7 +35,16 @@ public class PropertiesResolver {
         return Integer.parseInt(limit);
     }
 
-    public static PropertiesResolver empty() {
+    public Optional<String> getIgniteAtomicLongNamesProviderClass() {
+        String clazz = systemProperties.getProperty(PropertyNames.ATOMIC_LONG_NAMES_CLASS_PROVIDER);
+        if (clazz == null) {
+            clazz = properties.getProperty(PropertyNames.ATOMIC_LONG_NAMES_CLASS_PROVIDER);
+        }
+
+        return Optional.ofNullable(clazz);
+    }
+
+    public static PropertiesResolver loadProperties() {
         return new PropertiesResolver(new Properties());
     }
 

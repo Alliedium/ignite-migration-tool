@@ -1,4 +1,4 @@
-package org.alliedium.ignite.migration.dao.dataaccessor;
+package org.alliedium.ignite.migration;
 
 import java.util.ArrayList;
 import java.util.List;

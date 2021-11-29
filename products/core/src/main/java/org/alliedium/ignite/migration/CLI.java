@@ -3,9 +3,8 @@ package org.alliedium.ignite.migration;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
+import org.alliedium.ignite.migration.properties.AtomicLongNamesProviderFactory;
 import org.alliedium.ignite.migration.properties.PropertyNames;
 import org.alliedium.ignite.migration.properties.PropertiesResolver;
 import org.apache.commons.cli.*;
@@ -75,14 +74,13 @@ public class CLI {
         }
 
         PropertiesResolver propertiesResolver = loadToolPropertiesResolver();
-        List<String> atomicLongNamesList = propertiesResolver.getAtomicLongNamesList();
 
         IgniteConfiguration igniteConfiguration = IgniteConfigLoader.load("client");
         Ignite ignite = Ignition.getOrStart(igniteConfiguration);
 
-        Controller controller = atomicLongNamesList.isEmpty()
-                ? new Controller(ignite, IgniteAtomicLongNamesProvider.EMPTY, propertiesResolver)
-                : new Controller(ignite, () -> atomicLongNamesList, propertiesResolver);
+        IgniteAtomicLongNamesProvider atomicLongNamesProvider =
+                new AtomicLongNamesProviderFactory(ignite).create(propertiesResolver);
+        Controller controller = new Controller(ignite, atomicLongNamesProvider, propertiesResolver);
 
         if (line.hasOption(PropertyNames.CLI.SERIALIZE)) {
             logger.info("Ignite migration tool was started with '--serialize' argument. The following path will be used for avro files storing: " + "\"" + serializedDataStoragePath + "\"");
@@ -100,7 +98,7 @@ public class CLI {
 
     private static PropertiesResolver loadToolPropertiesResolver() throws IOException {
         if (System.getProperty(PropertyNames.System.PROPERTIES_FILE_PATH) == null) {
-            return PropertiesResolver.empty();
+            return PropertiesResolver.loadProperties();
         }
 
         return PropertiesResolver.loadProperties(System.getProperty(PropertyNames.System.PROPERTIES_FILE_PATH));

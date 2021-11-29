@@ -5,7 +5,6 @@ import org.alliedium.ignite.migration.dao.IgniteWritersFactory;
 import org.alliedium.ignite.migration.dao.IgniteScanner;
 import org.alliedium.ignite.migration.dao.IgniteWritersFactoryImpl;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
-import org.alliedium.ignite.migration.dao.dataaccessor.IgniteAtomicLongNamesProvider;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteDAO;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
@@ -37,7 +36,7 @@ public class Controller {
     private final DispatcherFactory dispatcherFactory;
 
     public Controller(Ignite ignite, IgniteAtomicLongNamesProvider atomicNamesProvider) {
-        this(ignite, atomicNamesProvider, PropertiesResolver.empty());
+        this(ignite, atomicNamesProvider, PropertiesResolver.loadProperties());
     }
 
     public Controller(Ignite ignite, IgniteAtomicLongNamesProvider atomicNamesProvider, PropertiesResolver propertiesResolver) {

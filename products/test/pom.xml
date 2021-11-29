@@ -13,6 +13,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.alliedium.ignite.migration</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-core</artifactId>
         </dependency>

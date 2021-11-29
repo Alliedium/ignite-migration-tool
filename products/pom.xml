@@ -24,6 +24,7 @@
         <module>demo</module>
         <module>igniteactivator</module>
         <module>test</module>
+        <module>common</module>
         <module>patchtools</module>
     </modules>
     <dependencyManagement>
