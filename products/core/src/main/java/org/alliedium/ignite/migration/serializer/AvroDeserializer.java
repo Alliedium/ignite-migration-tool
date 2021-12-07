@@ -57,13 +57,15 @@ public class AvroDeserializer implements IAvroDeserializer {
 
         String cacheName = serializedCachePath.getFileName().toString();
 
-        String deserializingCacheConfiguration = avroFileReader.getCacheConfiguration();
-        ICacheConfigurationData cacheConfigurationDTO = new CacheConfigurationData(deserializingCacheConfiguration);
+        String deserializedCacheConfiguration = avroFileReader.getCacheConfiguration();
+        ICacheConfigurationData cacheConfigurationDTO = new CacheConfigurationData(deserializedCacheConfiguration);
 
         String deserializingCacheEntryMeta = avroFileReader.getCacheEntryMeta();
         ICacheEntryMetaData cacheEntryMetaDTO = new CacheEntryMetaData(deserializingCacheEntryMeta);
 
-        cacheMetaDataDispatcher.publish(new CacheMetaData(cacheName, cacheConfigurationDTO, cacheEntryMetaDTO));
+        CacheDataTypes cacheDataTypes = avroFileReader.readCacheDataTypes();
+
+        cacheMetaDataDispatcher.publish(new CacheMetaData(cacheName, cacheConfigurationDTO, cacheEntryMetaDTO, cacheDataTypes));
 
         avroFileReader.distributeCacheData(cacheName, getFieldsTypes(cacheEntryMetaDTO), cacheDataDispatcher);
     }

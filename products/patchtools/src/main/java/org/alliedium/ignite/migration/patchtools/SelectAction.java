@@ -2,6 +2,7 @@ package org.alliedium.ignite.migration.patchtools;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.apache.avro.Schema;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.beam.sdk.io.AvroIO;
@@ -60,6 +61,8 @@ public class SelectAction implements TransformAction<TransformOutput> {
                 .collect(Collectors.toList());
         cacheConfiguration.setQueryEntities(queryEntities);
 
+        CacheDataTypes cacheDataTypes = cacheComponent.getAvroFileReader().readCacheDataTypes();
+
         return new TransformOutput.Builder()
                 .setPCollection(rows)
                 .setFields(fields)
@@ -67,6 +70,7 @@ public class SelectAction implements TransformAction<TransformOutput> {
                 .setCacheComponents(cacheComponent)
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
+                .setCacheDataTypes(cacheDataTypes)
                 .build();
     }
 

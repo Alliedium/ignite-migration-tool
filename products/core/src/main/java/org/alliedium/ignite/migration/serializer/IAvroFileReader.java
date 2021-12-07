@@ -1,6 +1,7 @@
 package org.alliedium.ignite.migration.serializer;
 
 import org.alliedium.ignite.migration.IDispatcher;
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.alliedium.ignite.migration.dto.ICacheData;
 
 import java.io.IOException;
@@ -21,6 +22,8 @@ public interface IAvroFileReader {
     String getCacheConfiguration() throws IOException;
 
     String getCacheEntryMeta() throws IOException;
+
+    CacheDataTypes readCacheDataTypes();
 
     void distributeAtomicsLongData(IDispatcher<Map.Entry<String, Long>> atomicsLongDispatcher) throws IOException;
 

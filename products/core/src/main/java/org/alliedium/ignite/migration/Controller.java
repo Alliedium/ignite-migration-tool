@@ -1,9 +1,6 @@
 package org.alliedium.ignite.migration;
 
-import org.alliedium.ignite.migration.dao.IIgniteReader;
-import org.alliedium.ignite.migration.dao.IgniteWritersFactory;
-import org.alliedium.ignite.migration.dao.IgniteScanner;
-import org.alliedium.ignite.migration.dao.IgniteWritersFactoryImpl;
+import org.alliedium.ignite.migration.dao.*;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteDAO;
 import org.alliedium.ignite.migration.dto.ICacheData;
@@ -87,7 +84,9 @@ public class Controller {
         cacheMetaDataDispatcher.subscribe(igniteWriter.getIgniteCacheMetaDataWriter());
 
         Dispatcher<ICacheData> cacheDataDispatcher = dispatcherFactory.newDispatcher();
-        cacheDataDispatcher.subscribe(igniteWriter.getIgniteCacheDataWriter());
+        IgniteCacheDataWriter igniteCacheDataWriter = igniteWriter.getIgniteCacheDataWriter();
+        cacheDataDispatcher.subscribe(igniteCacheDataWriter);
+        cacheMetaDataDispatcher.subscribe(igniteCacheDataWriter.getMetaDataConsumer());
 
         Dispatcher<Map.Entry<String, Long>> atomicsLongDispatcher = dispatcherFactory.newDispatcher();
         atomicsLongDispatcher.subscribe(igniteWriter.getIgniteAtomicsLongDataWriter());

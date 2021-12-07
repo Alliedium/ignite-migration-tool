@@ -1,27 +1,33 @@
 package org.alliedium.ignite.migration.dao;
 
+import org.alliedium.ignite.migration.IDataWriter;
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.BinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IgniteCacheDAO;
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.alliedium.ignite.migration.dto.ICacheData;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
+import org.alliedium.ignite.migration.dto.ICacheMetaData;
 import org.alliedium.ignite.migration.serializer.utils.FieldNames;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteDataStreamer;
 import org.apache.ignite.binary.BinaryObject;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
+public class IgniteCacheDataWriter extends IgniteDataWriter implements IDataWriter<ICacheData> {
 
     private static final int CACHE_CREATION_TIMEOUT_SECONDS = 30;
     private final Map<String, IgniteCacheDAO> cacheDAOMap = new HashMap<>();
     private final Map<String, IgniteDataStreamer<Object, BinaryObject>> binaryStreamers = new HashMap<>();
+    private final MetaDataConsumer metaDataConsumer;
 
     public IgniteCacheDataWriter(IIgniteDTOConverter<String, Object> cacheKeyConverter, Ignite ignite) {
         super(cacheKeyConverter, ignite);
+        this.metaDataConsumer = new MetaDataConsumer();
     }
 
     @Override
@@ -40,6 +46,10 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
         }
     }
 
+    public MetaDataConsumer getMetaDataConsumer() {
+        return this.metaDataConsumer;
+    }
+
     private IgniteCacheDAO getCacheDAO(String cacheName) {
         if (cacheDAOMap.get(cacheName) == null) {
             IgniteCacheDAO cacheDAO = new IgniteCacheDAO(ignite, cacheName);
@@ -50,8 +60,9 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
     }
 
     private Map.Entry<Object, BinaryObject> getCacheDataForInsert(Ignite ignite, ICacheData cacheData, IIgniteCacheDAO cacheDAO) {
-        String cacheValueType = cacheDAO.getCacheValueType();
-        String cacheKeyType = cacheDAO.getCacheKeyType();
+        CacheDataTypes cacheDataTypes = metaDataConsumer.metaDataMap.get(cacheData.getCacheName()).getTypes();
+        String cacheValueType = cacheDataTypes.getValType();
+        String cacheKeyType = cacheDataTypes.getKeyType();
         IIgniteDTOConverter<ICacheEntryValue, BinaryObject> valConverter = new BinaryObjectConverter(ignite, cacheValueType);
         IIgniteDTOConverter<ICacheEntryValue, BinaryObject> keyConverter = new BinaryObjectConverter(ignite, cacheKeyType);
         BinaryObject value = valConverter.convertFromDTO(cacheData.getCacheEntryValue());
@@ -80,7 +91,7 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
 
         long startTime = System.currentTimeMillis();
         do {
-            if (ignite.cacheNames().contains(cacheName)) {
+            if (ignite.cacheNames().contains(cacheName) && metaDataConsumer.metaDataMap.containsKey(cacheName)) {
                 IgniteDataStreamer<Object, BinaryObject> binaryStreamer = ignite.dataStreamer(cacheName);
                 // todo: this property can be handled by user
                 // basically it means override value of keys which already exist or not.
@@ -102,10 +113,20 @@ public class IgniteCacheDataWriter extends IgniteDataWriter<ICacheData> {
                         CACHE_CREATION_TIMEOUT_SECONDS, cacheName));
     }
 
+    public static class MetaDataConsumer implements IDataWriter<ICacheMetaData> {
+        private final Map<String, ICacheMetaData> metaDataMap = new ConcurrentHashMap<>();
+
+        @Override
+        public void write(ICacheMetaData data) {
+            metaDataMap.put(data.getCacheName(), data);
+        }
+    }
+
     @Override
     public void close() {
         cacheDAOMap.clear();
         binaryStreamers.forEach((cacheName, binaryStreamer) -> binaryStreamer.close());
         binaryStreamers.clear();
+        metaDataConsumer.metaDataMap.clear();
     }
 }

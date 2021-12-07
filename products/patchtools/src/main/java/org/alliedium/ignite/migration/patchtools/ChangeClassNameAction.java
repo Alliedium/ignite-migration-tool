@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.patchtools;
 
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
@@ -31,9 +32,13 @@ public class ChangeClassNameAction implements TransformAction<TransformOutput> {
         CacheConfiguration<Object, BinaryObject> cacheConfiguration = output.getCacheConfiguration();
         cacheConfiguration.setQueryEntities(queryEntities);
 
+        CacheDataTypes cacheDataTypes = output.getCacheDataTypes();
+        CacheDataTypes newCacheDataTypes = new CacheDataTypes(cacheDataTypes.getKeyType(), toClassName);
+
         return new TransformOutput.Builder(output)
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
+                .setCacheDataTypes(newCacheDataTypes)
                 .build();
     }
 

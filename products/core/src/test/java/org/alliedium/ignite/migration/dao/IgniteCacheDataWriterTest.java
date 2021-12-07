@@ -23,6 +23,9 @@ import javax.cache.Cache;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
 
     private final String cacheName = "test_cache";
@@ -30,6 +33,7 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
     private IIgniteDTOConverter<String, Object> converter;
     private IgniteCacheDataWriter cacheDataWriter;
     private IgniteCache<Integer, City> cache;
+    private CacheMetaData metaData;
 
     @BeforeMethod
     public void beforeIgniteCacheDataWriterTestMethod() {
@@ -38,6 +42,11 @@ public class IgniteCacheDataWriterTest extends ClientIgniteBaseTest {
         cache = ignite.createCache(configuration);
         converter = IgniteObjectStringConverter.GENERIC_CONVERTER;
         cacheDataWriter = new IgniteCacheDataWriter(converter, ignite);
+        metaData = mock(CacheMetaData.class);
+        when(metaData.getTypes()).thenReturn(new CacheDataTypes(Integer.class.getName(), City.class.getName()));
+        when(metaData.getCacheName()).thenReturn(cacheName);
+        cacheDataWriter.getMetaDataConsumer().write(metaData);
+
     }
 
     @AfterMethod

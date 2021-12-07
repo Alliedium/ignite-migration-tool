@@ -2,6 +2,8 @@ package org.alliedium.ignite.migration.dao.dataaccessor;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Optional;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
@@ -46,6 +48,11 @@ public class IgniteCacheDAO implements IIgniteCacheDAO {
         throw new IllegalStateException("provided ignite cache is empty");
     }
 
+    public boolean isCacheEmpty() {
+        Iterator<Cache.Entry<Object, BinaryObject>> iterator = binaryCache.iterator();
+        return !iterator.hasNext();
+    }
+
     @SuppressWarnings("unchecked")
     public CacheConfiguration<Object, BinaryObject> getCacheConfiguration() {
         return this.binaryCache.getConfiguration(CacheConfiguration.class);
@@ -55,23 +62,23 @@ public class IgniteCacheDAO implements IIgniteCacheDAO {
         return getCacheConfiguration().getQueryEntities();
     }
 
-    public String getCacheValueType() {
+    public Optional<String> getCacheValueType() {
         Iterator<QueryEntity> queryEntityIterator = getCacheQueryEntities().iterator();
         if (queryEntityIterator.hasNext()) {
-            return queryEntityIterator.next().findValueType();
+            return Optional.ofNullable(queryEntityIterator.next().findValueType());
         }
 
-        throw new IllegalStateException("ignite migration tool does not work without ignite cache query entities");
+        return Optional.empty();
     }
 
     @Override
-    public String getCacheKeyType() {
+    public Optional<String> getCacheKeyType() {
         Iterator<QueryEntity> queryEntityIterator = getCacheQueryEntities().iterator();
         if (queryEntityIterator.hasNext()) {
-            return queryEntityIterator.next().findKeyType();
+            return Optional.ofNullable(queryEntityIterator.next().findKeyType());
         }
 
-        throw new IllegalStateException("ignite migration tool does not work without ignite cache query entities");
+        return Optional.empty();
     }
 
 }

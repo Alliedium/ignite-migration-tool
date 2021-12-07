@@ -2,6 +2,11 @@ package org.alliedium.ignite.migration;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
+import org.alliedium.ignite.migration.dto.CacheConfigurationData;
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
+import org.alliedium.ignite.migration.dto.CacheEntryMetaData;
+import org.alliedium.ignite.migration.dto.CacheMetaData;
+import org.alliedium.ignite.migration.serializer.AvroCacheConfigurationsWriter;
 import org.alliedium.ignite.migration.serializer.AvroFileReader;
 import org.alliedium.ignite.migration.serializer.AvroFileWriter;
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
@@ -237,11 +242,14 @@ public class SupportedActionsQueryEntityTest extends ClientIgniteBaseTest {
         innerQueryEntity.setFields(fields);
 
         cacheConfiguration.setQueryEntities(queryEntities);
-        AvroFileWriter writer = new AvroFileWriter();
         Path cacheConfigurationsAvroFilePath = new PathCombine(source).plus(AvroFileNames.CACHE_CONFIGURATION_FILENAME).getPath();
-        writer.writeCacheConfigurationsToFile(
-                reader.getCacheConfigurationsAvroSchema(), cacheConfigurationsAvroFilePath,
-                converter.convertFromEntity(cacheConfiguration),
-                queryEntityConverter.convertFromEntity(queryEntities));
+        AvroCacheConfigurationsWriter cacheConfigurationsWriter = new AvroCacheConfigurationsWriter.Builder()
+                .setAvroSchema(reader.getCacheConfigurationsAvroSchema())
+                .setCacheConfigurationsAvroFilePath(cacheConfigurationsAvroFilePath)
+                .setCacheConfigurations(converter.convertFromEntity(cacheConfiguration))
+                .setCacheQueryEntities(queryEntityConverter.convertFromEntity(queryEntities))
+                .setCacheDataTypes(new CacheDataTypes(innerQueryEntity.getKeyType(), innerQueryEntity.getValueType()))
+                .build();
+        cacheConfigurationsWriter.write();
     }
 }

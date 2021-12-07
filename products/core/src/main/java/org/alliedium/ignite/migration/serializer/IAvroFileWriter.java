@@ -1,7 +1,6 @@
 package org.alliedium.ignite.migration.serializer;
 
 import java.nio.file.Path;
-import java.util.Map;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
 import org.apache.avro.generic.GenericRecord;
@@ -14,9 +13,6 @@ import org.apache.avro.generic.GenericRecord;
 public interface IAvroFileWriter {
 
     void writeAvroSchemaToFile(Schema avroSchema, Path avroSchemaFilePath);
-
-    void writeCacheConfigurationsToFile(Schema avroSchema, Path cacheConfigurationsAvroFilePath, String cacheConfigurations,
-                                        String cacheQueryEntities);
 
     DataFileWriter<GenericRecord> prepareFileWriter(Schema schema, Path path);
 }

@@ -60,6 +60,7 @@ public class RenameFieldAction implements TransformAction<TransformOutput> {
                 .setCacheComponents(out.getCacheComponents())
                 .setCacheConfiguration(cacheConfiguration)
                 .setQueryEntities(queryEntities)
+                .setCacheDataTypes(out.getCacheDataTypes())
                 .build();
     }
 

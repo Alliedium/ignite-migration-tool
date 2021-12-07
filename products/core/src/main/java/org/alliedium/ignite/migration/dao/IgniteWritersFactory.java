@@ -14,7 +14,7 @@ public interface IgniteWritersFactory {
 
     IDataWriter<ICacheMetaData> getIgniteCacheMetaDataWriter();
 
-    IDataWriter<ICacheData> getIgniteCacheDataWriter();
+    IgniteCacheDataWriter getIgniteCacheDataWriter();
 
     IDataWriter<Map.Entry<String, Long>> getIgniteAtomicsLongDataWriter();
 }

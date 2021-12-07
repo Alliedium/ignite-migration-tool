@@ -8,6 +8,7 @@ import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
 
 import java.util.*;
 
+import org.alliedium.ignite.migration.util.BinaryObjectUtil;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.binary.BinaryObjectBuilder;

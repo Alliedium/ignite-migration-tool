@@ -33,7 +33,7 @@ public class IgniteWritersFactoryImpl implements IgniteWritersFactory {
         return new IgniteCacheMetaDataWriter(cacheKeyConverter, ignite);
     }
 
-    public IDataWriter<ICacheData> getIgniteCacheDataWriter() {
+    public IgniteCacheDataWriter getIgniteCacheDataWriter() {
         return new IgniteCacheDataWriter(cacheKeyConverter, ignite);
     }
 
