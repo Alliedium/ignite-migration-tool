@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-public abstract class IgniteDataWriter<T> implements IDataWriter<T> {
+public abstract class IgniteDataWriter {
 
     //TODO: properties like below need to be outlined in separate file (yaml)
     // this is a way cache could be skipped

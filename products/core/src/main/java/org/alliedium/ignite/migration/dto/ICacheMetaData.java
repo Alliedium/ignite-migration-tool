@@ -11,4 +11,6 @@ public interface ICacheMetaData {
     ICacheConfigurationData getConfiguration();
 
     ICacheEntryMetaData getEntryMeta();
+
+    CacheDataTypes getTypes();
 }

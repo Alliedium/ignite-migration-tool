@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 
 import javax.cache.Cache;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 public class TestNestedObjects extends ClientIgniteBaseTest {
@@ -21,7 +22,6 @@ public class TestNestedObjects extends ClientIgniteBaseTest {
     @Test
     public void testNested() throws IOException {
         String cacheName = "personCache";
-        Ignite ignite = clientAPI.getIgnite();
         CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration = new CacheConfiguration<>();
         QueryEntity queryEntity = new QueryEntity()
                 .setValueType(Person.class.getName())
@@ -32,6 +32,19 @@ public class TestNestedObjects extends ClientIgniteBaseTest {
         cacheConfiguration.setQueryEntities(Collections.singletonList(queryEntity));
         cacheConfiguration.setName(cacheName);
 
+        testNested(cacheConfiguration, cacheName);
+    }
+
+    @Test
+    public void testNestedWithoutQueryEntities(Method method) throws IOException {
+        String cacheName = method.getName();
+        CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration = new CacheConfiguration<>();
+        cacheConfiguration.setName(cacheName);
+
+        testNested(cacheConfiguration, cacheName);
+    }
+
+    private void testNested(CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration, String cacheName) throws IOException {
         IgniteCache<AffinityKey<Integer>, Person> cache = ignite.createCache(cacheConfiguration);
         Map<AffinityKey<Integer>, Person> map = new HashMap<>();
 

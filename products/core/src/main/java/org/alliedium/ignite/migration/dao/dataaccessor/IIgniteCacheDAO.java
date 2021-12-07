@@ -2,6 +2,8 @@ package org.alliedium.ignite.migration.dao.dataaccessor;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
@@ -18,12 +20,14 @@ public interface IIgniteCacheDAO {
 
     Object getAnyKey();
 
+    boolean isCacheEmpty();
+
     CacheConfiguration<?, ?> getCacheConfiguration();
 
     Collection<QueryEntity> getCacheQueryEntities();
 
-    String getCacheValueType();
+    Optional<String> getCacheValueType();
 
-    String getCacheKeyType();
+    Optional<String> getCacheKeyType();
 
 }

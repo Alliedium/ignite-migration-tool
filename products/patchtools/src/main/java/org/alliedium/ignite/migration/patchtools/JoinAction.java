@@ -106,6 +106,7 @@ public class JoinAction implements TransformAction<TransformOutput> {
                                 .flatMap(Stream::of).toArray(CacheComponent[]::new))
                 .setQueryEntities(resultQueryEntities)
                 .setCacheConfiguration(cacheConfiguration)
+                .setCacheDataTypes(output1.getCacheDataTypes())
                 .build();
     }
 

@@ -1,27 +1,24 @@
 package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.IDispatcher;
-import org.alliedium.ignite.migration.dao.converters.BinaryObjectConverter;
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
-import org.alliedium.ignite.migration.dao.converters.PlainEntryValueWrapper;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import org.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
 import org.alliedium.ignite.migration.IgniteAtomicLongNamesProvider;
-import org.alliedium.ignite.migration.dao.datamanager.BinaryObjectFieldsInfoResolver;
-import org.alliedium.ignite.migration.dao.datamanager.IBinaryObjectFieldInfoResolver;
 import org.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;
 import org.alliedium.ignite.migration.dao.dtobuilder.EntryMetaBuilder;
 import org.alliedium.ignite.migration.dao.dtobuilder.IDTOBuilder;
 
 import java.util.*;
 
+import org.alliedium.ignite.migration.dao.extractors.IgniteDataExtractor;
+import org.alliedium.ignite.migration.dao.extractors.IgniteDataExtractorFactory;
 import org.alliedium.ignite.migration.dto.*;
-import org.alliedium.ignite.migration.serializer.utils.FieldNames;
+import org.alliedium.ignite.migration.util.BinaryObjectUtil;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteAtomicLong;
 import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.cache.query.ScanQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,7 +78,11 @@ public class IgniteScanner implements IIgniteReader {
 
         ICacheConfigurationData cacheConfigurationDTO = getCacheConfigDTO(igniteCacheDAO);
         ICacheEntryMetaData cacheEntryMetaDTO = getCacheEntryMetaDTO(igniteCacheDAO);
-        ICacheMetaData cacheMetaData = new CacheMetaData(cacheName, cacheConfigurationDTO, cacheEntryMetaDTO);
+
+        CacheDataTypes cacheDataTypes = extractCacheDataTypes(igniteCacheDAO);
+
+        ICacheMetaData cacheMetaData = new CacheMetaData(
+                cacheName, cacheConfigurationDTO, cacheEntryMetaDTO, cacheDataTypes);
 
         cacheMetaDataDispatcher.publish(cacheMetaData);
 
@@ -90,7 +91,8 @@ public class IgniteScanner implements IIgniteReader {
             return;
         }
 
-        getCacheDataDTO(cacheName, igniteCacheDAO, cacheDataDispatcher);
+        IgniteDataExtractor extractor = IgniteDataExtractorFactory.create(cacheName, igniteCacheDAO, cacheDataDispatcher);
+        extractor.extract();
     }
 
     private ICacheConfigurationData getCacheConfigDTO(IIgniteCacheDAO igniteCacheDAO) {
@@ -103,28 +105,29 @@ public class IgniteScanner implements IIgniteReader {
         return cacheEntryMetaDTOBuilder.build();
     }
 
-    private void getCacheDataDTO(String cacheName, IIgniteCacheDAO igniteCacheDAO, IDispatcher<ICacheData> cacheDataDispatcher) {
-        BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
-        IBinaryObjectFieldInfoResolver cacheFieldMetaBuilder = new BinaryObjectFieldsInfoResolver(cacheBinaryObject);
-        IIgniteDTOConverter<ICacheEntryValue, BinaryObject> cacheValueConverter = new BinaryObjectConverter(cacheFieldMetaBuilder.resolveFieldsInfo());
+    /**
+     * Extracts cache data types from cache key and val objects.
+     * In case cache is empty data types are taken from query entities.
+     * In case cache is empty and no query entities are set will return blank lines instead of types.
+     * There should not be a situation when cache data types are blank lines but cache data exists
+     * @param igniteCacheDAO
+     * @return cache data types
+     */
+    private CacheDataTypes extractCacheDataTypes(IIgniteCacheDAO igniteCacheDAO) {
+        if (igniteCacheDAO.isCacheEmpty()) {
+            Optional<String> keyType = igniteCacheDAO.getCacheKeyType();
+            Optional<String> valType = igniteCacheDAO.getCacheValueType();
+            return new CacheDataTypes(keyType.orElse( ""), valType.orElse(""));
+        }
 
+        BinaryObject cacheBinaryObject = igniteCacheDAO.getAnyValue();
+        String valType = BinaryObjectUtil.getBinaryTypeName(cacheBinaryObject);
         Object anyKey = igniteCacheDAO.getAnyKey();
         if (anyKey instanceof BinaryObject) {
-            IBinaryObjectFieldInfoResolver keyFieldsResolver = new BinaryObjectFieldsInfoResolver((BinaryObject) anyKey);
-            IIgniteDTOConverter<ICacheEntryValue, BinaryObject> keyConverter = new BinaryObjectConverter(keyFieldsResolver.resolveFieldsInfo());
-            ScanQuery<BinaryObject, BinaryObject> scanQuery = new ScanQuery<>();
-            igniteCacheDAO.getBinaryCache().withKeepBinary().query(scanQuery).forEach(entry -> {
-                ICacheEntryValue key = keyConverter.convertFromEntity(entry.getKey());
-                ICacheEntryValue val = cacheValueConverter.convertFromEntity(entry.getValue());
-                cacheDataDispatcher.publish(new CacheData(cacheName, key, val));
-            });
-        } else {
-            ScanQuery<Object, BinaryObject> scanQuery = new ScanQuery<>();
-            igniteCacheDAO.getBinaryCache().query(scanQuery).forEach(entry -> {
-                ICacheEntryValue key = PlainEntryValueWrapper.wrap(entry.getKey(), FieldNames.KEY_FIELD_NAME);
-                ICacheEntryValue val = cacheValueConverter.convertFromEntity(entry.getValue());
-                cacheDataDispatcher.publish(new CacheData(cacheName, key, val));
-            });
+            BinaryObject key = (BinaryObject) anyKey;
+            return new CacheDataTypes(BinaryObjectUtil.getBinaryTypeName(key), valType);
         }
+
+        return new CacheDataTypes(anyKey.getClass().getName(), valType);
     }
 }

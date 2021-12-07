@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.dao;
 
+import org.alliedium.ignite.migration.IDataWriter;
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dto.ICacheMetaData;
@@ -9,7 +10,7 @@ import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 import java.util.Collection;
 
-public class IgniteCacheMetaDataWriter extends IgniteDataWriter<ICacheMetaData> {
+public class IgniteCacheMetaDataWriter extends IgniteDataWriter implements IDataWriter<ICacheMetaData> {
 
     private final IIgniteDTOConverter<String, CacheConfiguration<Object, BinaryObject>> configurationConverter = IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER;
     private final IIgniteDTOConverter<String, Collection<QueryEntity>> queryEntityConverter = IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER;

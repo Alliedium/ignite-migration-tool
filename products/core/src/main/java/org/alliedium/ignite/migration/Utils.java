@@ -100,4 +100,21 @@ public class Utils {
         return subdirectoryNamesList;
     }
 
+    public static void createFileFromPath(Path filePath) {
+        if(Files.exists(filePath)) {
+            return;
+        }
+
+        try {
+            Path parent = filePath.getParent();
+            if (parent != null && !Files.exists(parent)) {
+                logger.info("parent directory " + parent + " does not exist. Creating the directory.");
+                Files.createDirectories(parent);
+            }
+            Files.createFile(filePath);
+        } catch(IOException e) {
+            logger.error("Failed to create file by path: " + filePath, e);
+            throw new IllegalArgumentException(e);
+        }
+    }
 }

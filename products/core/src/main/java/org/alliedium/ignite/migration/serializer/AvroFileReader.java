@@ -21,6 +21,8 @@ import org.apache.avro.io.DatumReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.alliedium.ignite.migration.serializer.utils.FieldNames.*;
+
 /**
  * AvroFileReader is used for getting avro files from the filesystem.
  * Avro data from picked files is being deserialized and prepared for further processing.
@@ -28,10 +30,6 @@ import org.slf4j.LoggerFactory;
 public class AvroFileReader implements IAvroFileReader {
 
     private static final Logger logger = LoggerFactory.getLogger(AvroFileReader.class);
-    private static final String AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
-    private static final String AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
-    private static final String AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_NAME_FIELD_NAME = "igniteAtomicLongName";
-    private static final String AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME = "igniteAtomicLongValue";
 
     private final CacheAvroFilesLocator filesLocator;
     private final PathCombine serializedCachePath;
@@ -64,7 +62,7 @@ public class AvroFileReader implements IAvroFileReader {
         Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
         try {
             GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
-            return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME).toString();
+            return deserializedCacheConfiguration.get(CONFIGURATIONS_FIELD_NAME).toString();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -75,7 +73,20 @@ public class AvroFileReader implements IAvroFileReader {
         Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
         try {
             GenericRecord deserializedCacheConfiguration = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
-            return deserializedCacheConfiguration.get(AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME).toString();
+            return deserializedCacheConfiguration.get(QUERY_ENTITIES_FIELD_NAME).toString();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public CacheDataTypes readCacheDataTypes() {
+        Schema cacheConfigurationsAvroSchema = getCacheConfigurationsAvroSchema();
+        Path cacheConfigurationFilePath = filesLocator.cacheConfigurationPath();
+        try {
+            GenericRecord configurationRecord = deserializeCacheConfiguration(cacheConfigurationFilePath, cacheConfigurationsAvroSchema);
+            GenericRecord dataTypes = (GenericRecord) configurationRecord.get(CACHE_DATA_TYPES_FIELD_NAME);
+            return new CacheDataTypes(dataTypes.get(CACHE_KEY_TYPE_FIELD_NAME).toString(),
+                    dataTypes.get(CACHE_VAL_TYPE_FIELD_NAME).toString());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -92,8 +103,8 @@ public class AvroFileReader implements IAvroFileReader {
         List<GenericRecord> atomicsData = deserializeAvro(atomicsDataFilePath, atomicsSchema);
 
         atomicsData.forEach(genericRecord -> {
-            String atomicLongName = genericRecord.get(AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_NAME_FIELD_NAME).toString();
-            long atomicLongValue = (long) genericRecord.get(AVRO_GENERIC_RECORD_IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME);
+            String atomicLongName = genericRecord.get(IGNITE_ATOMIC_LONG_NAME_FIELD_NAME).toString();
+            long atomicLongValue = (long) genericRecord.get(IGNITE_ATOMIC_LONG_VALUE_FIELD_NAME);
 
             atomicsLongDispatcher.publish(new AbstractMap.SimpleEntry<>(atomicLongName, atomicLongValue));
         });

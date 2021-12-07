@@ -102,7 +102,13 @@ public class AvroSerializer implements ISerializer {
         Path cacheConfigurationsAvroSchemaFilePath = cacheRelatedPath.plus(AvroFileNames.SCHEMA_FOR_CACHE_CONFIGURATION_FILENAME).getPath();
 
         avroFileWriter.writeAvroSchemaToFile(cacheConfigurationsAvroSchema, cacheConfigurationsAvroSchemaFilePath);
-        avroFileWriter.writeCacheConfigurationsToFile(cacheConfigurationsAvroSchema, cacheConfigurationsAvroFilePath,
-                cacheMetaData.getConfiguration().toString(), cacheMetaData.getEntryMeta().toString());
+        AvroCacheConfigurationsWriter cacheConfigurationsWriter = new AvroCacheConfigurationsWriter.Builder()
+                .setAvroSchema(cacheConfigurationsAvroSchema)
+                .setCacheConfigurationsAvroFilePath(cacheConfigurationsAvroFilePath)
+                .setCacheConfigurations(cacheMetaData.getConfiguration().toString())
+                .setCacheQueryEntities(cacheMetaData.getEntryMeta().toString())
+                .setCacheDataTypes(cacheMetaData.getTypes())
+                .build();
+        cacheConfigurationsWriter.write();
     }
 }

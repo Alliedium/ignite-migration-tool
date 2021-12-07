@@ -7,12 +7,13 @@ import java.nio.file.Path;
 
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
-import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericDatumWriter;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.io.DatumWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.alliedium.ignite.migration.Utils.createFileFromPath;
 
 /**
  * AvroFileWriter accepts the data and executes it's serialization to avro.
@@ -24,8 +25,6 @@ import org.slf4j.LoggerFactory;
 public class AvroFileWriter implements IAvroFileWriter {
 
     private static final Logger logger = LoggerFactory.getLogger(AvroFileWriter.class);
-    private static final String AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
-    private static final String AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
 
     @Override
     public void writeAvroSchemaToFile(Schema avroSchema, Path avroSchemaFilePath) {
@@ -52,51 +51,5 @@ public class AvroFileWriter implements IAvroFileWriter {
         }
 
         return dataFileWriter;
-    }
-
-    /**
-     * Serializes cache configurations to avro file.
-     *
-     * @see <a href="http://avro.apache.org/docs/current/gettingstartedjava.html#Serializing+and+deserializing+without+code+generation">Avro serialization short guide</a>
-     *
-     * @param avroSchema pre-defined avro schema, which describes how should provided cache configurations be stored in avro
-     * @param cacheConfigurationsAvroFilePath path to a file where serialized cache configurations are going to be stored
-     * @param cacheConfigurations cache configurations from DTO
-     * @param cacheQueryEntities cache query entities from DTO
-     */
-    @Override
-    public void writeCacheConfigurationsToFile(Schema avroSchema, Path cacheConfigurationsAvroFilePath, String cacheConfigurations,
-                                               String cacheQueryEntities) {
-        createFileFromPath(cacheConfigurationsAvroFilePath);
-        DatumWriter<GenericRecord> datumWriter = new GenericDatumWriter<>(avroSchema);
-        try(DataFileWriter<GenericRecord> dataFileWriter = new DataFileWriter<>(datumWriter)) {
-            dataFileWriter.create(avroSchema, cacheConfigurationsAvroFilePath.toFile());
-
-            GenericRecord genericRecord = new GenericData.Record(avroSchema);
-            genericRecord.put(AVRO_GENERIC_RECORD_CONFIGURATIONS_FIELD_NAME, cacheConfigurations);
-            genericRecord.put(AVRO_GENERIC_RECORD_QUERY_ENTITIES_FIELD_NAME, cacheQueryEntities);
-            dataFileWriter.append(genericRecord);
-        }
-        catch (IOException e) {
-            logger.error("Cache configurations to " + cacheConfigurationsAvroFilePath + " file writing error: " + e.getMessage());
-        }
-    }
-
-    private void createFileFromPath(Path filePath) {
-        if(Files.exists(filePath)) {
-            return;
-        }
-
-        try {
-            Path parent = filePath.getParent();
-            if (parent != null && !Files.exists(parent)) {
-                logger.info("parent directory " + parent + " does not exist. Creating the directory.");
-                Files.createDirectories(parent);
-            }
-            Files.createFile(filePath);
-        } catch(IOException e) {
-            logger.error("Failed to create file by path: " + filePath, e);
-            throw new IllegalArgumentException(e);
-        }
     }
 }

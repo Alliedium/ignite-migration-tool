@@ -10,6 +10,8 @@ import org.alliedium.ignite.migration.util.UniqueKey;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
+import static org.alliedium.ignite.migration.serializer.utils.FieldNames.*;
+
 /**
  * AvroSchemaBuilder is responsible for avro schema creation. Avro format intends an avro schema presence for each avro file.
  * Hence current AvroSchemaBuilder unit is able to create avro schemas for both configurations and data avro files.
@@ -27,6 +29,7 @@ public class AvroSchemaBuilder implements IAvroSchemaBuilder {
 
     private static final String CACHE_CONFIGURATIONS_FIELD_NAME = "cacheConfigurations";
     private static final String CACHE_QUERY_ENTITIES_FIELD_NAME = "cacheQueryEntities";
+    private static final String CACHE_DATA_TYPES_NAMESPACE = "dataTypesNamespace";
 
     @Override
     public Schema getCacheConfigurationsAvroSchema() {
@@ -35,6 +38,13 @@ public class AvroSchemaBuilder implements IAvroSchemaBuilder {
 
         fieldAssembler.name(CACHE_CONFIGURATIONS_FIELD_NAME).type().stringType().noDefault();
         fieldAssembler.name(CACHE_QUERY_ENTITIES_FIELD_NAME).type().stringType().noDefault();
+
+        SchemaBuilder.FieldAssembler<Schema> cacheDataTypesFieldAssembler = SchemaBuilder.record(CACHE_DATA_TYPES_FIELD_NAME)
+                .namespace(CACHE_DATA_TYPES_NAMESPACE).fields();
+        cacheDataTypesFieldAssembler.name(CACHE_KEY_TYPE_FIELD_NAME).type().stringType().noDefault();
+        cacheDataTypesFieldAssembler.name(CACHE_VAL_TYPE_FIELD_NAME).type().stringType().noDefault();
+
+        fieldAssembler.name(CACHE_DATA_TYPES_FIELD_NAME).type(cacheDataTypesFieldAssembler.endRecord()).noDefault();
 
         return fieldAssembler.endRecord();
     }

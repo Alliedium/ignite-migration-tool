@@ -2,6 +2,7 @@ package org.alliedium.ignite.migration.dao;
 
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import org.alliedium.ignite.migration.dto.CacheConfigurationData;
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.alliedium.ignite.migration.dto.CacheEntryMetaData;
 import org.alliedium.ignite.migration.dto.CacheMetaData;
 import org.apache.ignite.Ignite;
@@ -25,7 +26,8 @@ public class IgniteCacheMetaDataWriterTest {
 
         CacheMetaData metaData = new CacheMetaData("cacheName",
                 new CacheConfigurationData(IgniteObjectStringConverter.CACHE_CONFIG_CONVERTER.convertFromEntity(cacheConfiguration)),
-                new CacheEntryMetaData(IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER.convertFromEntity(queryEntityCollection)));
+                new CacheEntryMetaData(IgniteObjectStringConverter.QUERY_ENTITY_CONVERTER.convertFromEntity(queryEntityCollection)),
+                new CacheDataTypes(String.class.getName(), String.class.getName()));
 
         cacheMetaDataWriter.write(metaData);
 

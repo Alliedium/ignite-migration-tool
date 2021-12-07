@@ -1,5 +1,6 @@
 package org.alliedium.ignite.migration.patchtools;
 
+import org.alliedium.ignite.migration.dto.CacheDataTypes;
 import org.apache.avro.Schema;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.Row;
@@ -17,6 +18,7 @@ public class TransformOutput implements DataComponentsProvider {
     private final Schema schema;
     private final CacheConfiguration<Object, BinaryObject> cacheConfiguration;
     private final Collection<QueryEntity> queryEntities;
+    private final CacheDataTypes cacheDataTypes;
 
     private TransformOutput(Builder builder) {
         this.pCollection = builder.pCollection;
@@ -25,6 +27,7 @@ public class TransformOutput implements DataComponentsProvider {
         this.schema = builder.schema;
         this.cacheConfiguration = builder.cacheConfiguration;
         this.queryEntities = builder.queryEntities;
+        this.cacheDataTypes = builder.cacheDataTypes;
     }
 
     public static class Builder {
@@ -34,6 +37,7 @@ public class TransformOutput implements DataComponentsProvider {
         private Schema schema;
         private CacheConfiguration<Object, BinaryObject> cacheConfiguration;
         private Collection<QueryEntity> queryEntities;
+        private CacheDataTypes cacheDataTypes;
 
         public Builder() {
         }
@@ -45,6 +49,7 @@ public class TransformOutput implements DataComponentsProvider {
             setPCollection(other.getPCollection());
             setQueryEntities(other.getQueryEntities());
             setCacheConfiguration(other.getCacheConfiguration());
+            setCacheDataTypes(other.getCacheDataTypes());
         }
 
         public Builder setPCollection(PCollection<Row> pCollection) {
@@ -77,6 +82,11 @@ public class TransformOutput implements DataComponentsProvider {
             return this;
         }
 
+        public Builder setCacheDataTypes(CacheDataTypes cacheDataTypes) {
+            this.cacheDataTypes = cacheDataTypes;
+            return this;
+        }
+
         private void validate() {
             Objects.requireNonNull(cacheComponents, "cacheComponents should not be null");
             Objects.requireNonNull(pCollection, "pCollection should not be null");
@@ -84,6 +94,7 @@ public class TransformOutput implements DataComponentsProvider {
             Objects.requireNonNull(schema, "schema should not be null");
             Objects.requireNonNull(cacheConfiguration, "cacheConfiguration should not be null");
             Objects.requireNonNull(queryEntities, "queryEntities should not be null");
+            Objects.requireNonNull(cacheDataTypes, "cacheDataType should not be null");
             if (cacheComponents.length < 1) {
                 throw new IllegalArgumentException("At list one cache component should be provided");
             }
@@ -120,6 +131,10 @@ public class TransformOutput implements DataComponentsProvider {
 
     public CacheConfiguration<Object, BinaryObject> getCacheConfiguration() {
         return cacheConfiguration;
+    }
+
+    public CacheDataTypes getCacheDataTypes() {
+        return cacheDataTypes;
     }
 
     public Collection<QueryEntity> getQueryEntities() {

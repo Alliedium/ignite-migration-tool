@@ -8,9 +8,10 @@ import java.util.*;
 
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.apache.ignite.binary.BinaryObject;
-import org.apache.ignite.binary.BinaryObjectException;
 import org.apache.ignite.cache.affinity.AffinityKey;
 import org.apache.ignite.internal.binary.BinaryEnumObjectImpl;
+
+import static org.alliedium.ignite.migration.util.BinaryObjectUtil.isAffinityKey;
 
 /**
  * Unit responsible for figuring out the meta-data of Apache Ignite cache fields (field name, value type class name,
@@ -96,15 +97,6 @@ public class BinaryObjectFieldsInfoResolver implements IBinaryObjectFieldInfoRes
             // do nothing
         }
         return Optional.empty();
-    }
-
-    private boolean isAffinityKey(BinaryObject binaryObject) {
-        try {
-            binaryObject.type().fieldNames();
-            return binaryObject.type().typeName().equals(AffinityKey.class.getName());
-        } catch (BinaryObjectException e) {
-            return affinityKeyFields.stream().allMatch(binaryObject::hasField);
-        }
     }
 
     private boolean isBinaryObject(Object obj) {

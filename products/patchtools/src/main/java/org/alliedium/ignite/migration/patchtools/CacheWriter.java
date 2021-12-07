@@ -2,6 +2,8 @@ package org.alliedium.ignite.migration.patchtools;
 
 import org.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import org.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
+import org.alliedium.ignite.migration.dto.CacheMetaData;
+import org.alliedium.ignite.migration.serializer.AvroCacheConfigurationsWriter;
 import org.alliedium.ignite.migration.serializer.AvroFileWriter;
 import org.alliedium.ignite.migration.serializer.utils.AvroFileNames;
 import org.alliedium.ignite.migration.util.PathCombine;
@@ -59,9 +61,15 @@ public class CacheWriter {
 
         cacheConfigurationsSchema = result.getCacheComponents()[0].getAvroFileReader().getCacheConfigurationsAvroSchema();
 
-        avroFileWriter.writeCacheConfigurationsToFile(cacheConfigurationsSchema, cacheConfigurationsAvroFilePath,
-                cacheConfigConverter.convertFromEntity(result.getCacheConfiguration()),
-                queryEntityConverter.convertFromEntity(result.getQueryEntities()));
+        AvroCacheConfigurationsWriter cacheConfigurationsWriter = new AvroCacheConfigurationsWriter.Builder()
+                .setAvroSchema(cacheConfigurationsSchema)
+                .setCacheConfigurationsAvroFilePath(cacheConfigurationsAvroFilePath)
+                .setCacheConfigurations(cacheConfigConverter.convertFromEntity(result.getCacheConfiguration()))
+                .setCacheQueryEntities(queryEntityConverter.convertFromEntity(result.getQueryEntities()))
+                .setCacheDataTypes(result.getCacheDataTypes())
+                .build();
+        cacheConfigurationsWriter.write();
+
         avroFileWriter.writeAvroSchemaToFile(cacheConfigurationsSchema, configurationsSchemaAvroFilePath);
     }
 }

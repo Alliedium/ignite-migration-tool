@@ -67,6 +67,7 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
                 .setCacheComponents(out.getCacheComponents())
                 .setQueryEntities(queryEntities)
                 .setCacheConfiguration(cacheConfiguration)
+                .setCacheDataTypes(out.getCacheDataTypes())
                 .build();
     }
 
