@@ -1,7 +1,7 @@
 package org.alliedium.ignite.migration.patchtools;
 
 import org.apache.avro.Schema;
-import org.apache.beam.sdk.schemas.transforms.AddFields;
+import org.apache.beam.sdk.schemas.SchemaCoder;
 import org.apache.beam.sdk.schemas.utils.AvroUtils;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.values.PCollection;
@@ -10,6 +10,7 @@ import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,10 +51,9 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
         org.apache.beam.sdk.schemas.Schema beamSchema = AvroUtils.toBeamSchema(newSchema);
 
         PCollection<Row> pCollection = out.getPCollection()
-                .apply(AddFields.<Row>create()
-                        .field(newFieldName, beamSchema.getField(newFieldName).getType()));
-        pCollection = pCollection
-                .apply(ParDo.of(rowElementsProcessor)).setCoder(pCollection.getCoder());
+                .apply(ParDo.of(new CopyFieldProcessor(beamSchema, fieldToCopy, newFieldName)))
+                .setRowSchema(beamSchema)
+                .setCoder(SchemaCoder.of(beamSchema));
 
         CacheConfiguration<Object, BinaryObject> cacheConfiguration = out.getCacheConfiguration();
         Collection<QueryEntity> queryEntities = out.getQueryEntities();
@@ -69,6 +69,32 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
                 .setCacheConfiguration(cacheConfiguration)
                 .setCacheDataTypes(out.getCacheDataTypes())
                 .build();
+    }
+
+    /**
+     * Copies field for beams rows. expects provided beam schema contains new field schema
+     */
+    private static class CopyFieldProcessor extends RowElementsProcessor {
+
+        public CopyFieldProcessor(org.apache.beam.sdk.schemas.Schema beamSchema, String fieldToCopy, String newFieldName) {
+            super((RowFunction & Serializable) (Row row) -> {
+                Row.Builder rowBuilder = Row.withSchema(beamSchema);
+                Row.FieldValueBuilder fieldValueBuilder = null;
+                for (org.apache.beam.sdk.schemas.Schema.Field field : beamSchema.getFields()) {
+                    Object val = field.getName().equals(newFieldName)
+                            ? row.getValue(fieldToCopy)
+                            : row.getValue(field.getName());
+                    if (fieldValueBuilder == null) {
+                        fieldValueBuilder = rowBuilder.withFieldValue(field.getName(), val);
+                    }
+                    fieldValueBuilder.withFieldValue(field.getName(), val);
+                }
+                if (fieldValueBuilder == null) {
+                    throw new IllegalStateException("No fields found when executing copy field action");
+                }
+                return fieldValueBuilder.build();
+            });
+        }
     }
 
     public static class Builder {
