@@ -58,6 +58,16 @@ public class CacheEntryValueField implements ICacheEntryValueField {
         return !nested.isEmpty();
     }
 
+    @Override
+    public String toString() {
+        return "CacheEntryValueField{" +
+                "name='" + name + '\'' +
+                ", typeClassName='" + typeClassName + '\'' +
+                ", value=" + value +
+                ", nested=" + nested +
+                '}';
+    }
+
     public static class Builder {
         private String name;
         private String typeClassName;

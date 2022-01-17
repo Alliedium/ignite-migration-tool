@@ -2,6 +2,7 @@ package org.alliedium.ignite.migration.serializer.converters.schemafields;
 
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
+import org.alliedium.ignite.migration.util.TypeUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -17,7 +18,6 @@ public class SchemaFieldAssemblerFactory {
         if (!nested.isEmpty()) {
             return new NestedAvroSchemaFieldAssembler(nested);
         }
-
         if (TypesResolver.isTimestamp(type)) {
             return new TimestampAvroSchemaFieldAssembler();
         }
@@ -29,6 +29,12 @@ public class SchemaFieldAssemblerFactory {
         }
         if (TypesResolver.isInteger(type)) {
             return new IntegerAvroSchemaFieldAssembler();
+        }
+        if (TypeUtils.isCollection(type)) {
+            return new CollectionAvroSchemaFieldAssembler();
+        }
+        if (TypeUtils.isMap(type)) {
+            return new MapAvroSchemaFieldAssembler();
         }
 
         return new GenericAvroSchemaFieldAssembler(type);

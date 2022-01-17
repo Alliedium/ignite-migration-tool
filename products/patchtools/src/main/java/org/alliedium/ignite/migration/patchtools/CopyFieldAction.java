@@ -18,13 +18,11 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
     private final TransformAction<TransformOutput> action;
     private final String fieldToCopy;
     private final String newFieldName;
-    private final RowElementsProcessor rowElementsProcessor;
 
     private CopyFieldAction(Builder builder) {
         this.action = builder.action;
         this.fieldToCopy = builder.fieldToCopy;
         this.newFieldName = builder.newFieldName;
-        this.rowElementsProcessor = builder.rowElementsProcessor;
     }
 
     public TransformOutput execute() {
@@ -51,7 +49,7 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
         org.apache.beam.sdk.schemas.Schema beamSchema = AvroUtils.toBeamSchema(newSchema);
 
         PCollection<Row> pCollection = out.getPCollection()
-                .apply(ParDo.of(new CopyFieldProcessor(beamSchema, fieldToCopy, newFieldName)))
+                .apply(ParDo.of(CopyFieldProcessor.create(beamSchema, fieldToCopy, newFieldName)))
                 .setRowSchema(beamSchema)
                 .setCoder(SchemaCoder.of(beamSchema));
 
@@ -72,12 +70,13 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
     }
 
     /**
-     * Copies field for beams rows. expects provided beam schema contains new field schema
+     * Creates copy field processor, copies field for beam rows,
+     * expects provided beam schema contains new field schema
      */
-    private static class CopyFieldProcessor extends RowElementsProcessor {
+    private static class CopyFieldProcessor {
 
-        public CopyFieldProcessor(org.apache.beam.sdk.schemas.Schema beamSchema, String fieldToCopy, String newFieldName) {
-            super((RowFunction & Serializable) (Row row) -> {
+        public static RowElementsProcessor create(org.apache.beam.sdk.schemas.Schema beamSchema, String fieldToCopy, String newFieldName) {
+            RowFunction copyFunction = (RowFunction & Serializable) (Row row) -> {
                 Row.Builder rowBuilder = Row.withSchema(beamSchema);
                 Row.FieldValueBuilder fieldValueBuilder = null;
                 for (org.apache.beam.sdk.schemas.Schema.Field field : beamSchema.getFields()) {
@@ -93,13 +92,14 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
                     throw new IllegalStateException("No fields found when executing copy field action");
                 }
                 return fieldValueBuilder.build();
-            });
+            };
+
+            return new RowElementsProcessor(copyFunction);
         }
     }
 
     public static class Builder {
         private TransformAction<TransformOutput> action;
-        private RowElementsProcessor rowElementsProcessor;
         private String fieldToCopy;
         private String newFieldName;
 
@@ -111,10 +111,6 @@ public class CopyFieldAction implements TransformAction<TransformOutput> {
         public Builder copyField(String fieldToCopy, String newFieldName) {
             this.fieldToCopy = fieldToCopy;
             this.newFieldName = newFieldName;
-            this.rowElementsProcessor = new RowElementsProcessor(row ->
-                    Row.fromRow(row)
-                            .withFieldValue(newFieldName, row.getValue(fieldToCopy))
-                            .build());
             return this;
         }
 

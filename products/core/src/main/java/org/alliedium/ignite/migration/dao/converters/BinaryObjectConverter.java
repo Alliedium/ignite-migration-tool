@@ -6,9 +6,11 @@ import org.alliedium.ignite.migration.dto.CacheEntryValueField;
 import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
-import org.alliedium.ignite.migration.util.BinaryObjectUtil;
+import org.alliedium.ignite.migration.util.TypeUtils;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.binary.BinaryObjectBuilder;
@@ -41,25 +43,64 @@ public class BinaryObjectConverter implements IIgniteDTOConverter<ICacheEntryVal
 
     public BinaryObject convertFromDTO(ICacheEntryValue dto) {
         BinaryObjectBuilder binaryObjectBuilder = ignite.binary().builder(cacheValueType);
-        dto.getFields().forEach(field -> setField(binaryObjectBuilder, field));
+        dto.getFields().forEach(field ->
+                binaryObjectBuilder.setField(field.getName(), extractValueFrom(field)));
         return binaryObjectBuilder.build();
     }
 
-    private void setField(BinaryObjectBuilder builder, ICacheEntryValueField field) {
+    /**
+     * Extracts value from field, can return null in case there is no value.
+     * Any value can be null, that's why it is acceptable to return null here.
+     *
+     * @param field
+     * @return extracted object or null if there is no value
+     */
+    private Object extractValueFrom(ICacheEntryValueField field) {
         Optional<Object> fieldValue = field.getFieldValue();
-        if (!field.hasNested()) {
-            if (fieldValue.isPresent()) {
-                builder.setField(field.getName(), fieldValue.get());
-            } else {
-                builder.setField(field.getName(), null);
-            }
-            return;
+
+        if (isNoValueField(field)) {
+            return null;
+        }
+        if (TypeUtils.isCollection(field.getTypeClassName())) {
+            @SuppressWarnings("unchecked")
+            List<ICacheEntryValueField> elements = (List<ICacheEntryValueField>) fieldValue.get();
+            Collection<Object> collection = instantiate(field.getTypeClassName());
+            elements.forEach(element -> collection.add(extractValueFrom(element)));
+            return collection;
+        }
+        if (TypeUtils.isMap(field.getTypeClassName())) {
+            @SuppressWarnings("unchecked")
+            Map<ICacheEntryValueField, ICacheEntryValueField> dtoMap = (Map<ICacheEntryValueField, ICacheEntryValueField>) fieldValue.get();
+            Map<Object, Object> map = instantiate(field.getTypeClassName());
+            dtoMap.forEach((key, val) -> map.put(extractValueFrom(key), extractValueFrom(val)));
+            return map;
+        }
+        if (field.hasNested()) {
+            BinaryObjectBuilder nestedBuilder = ignite.binary().builder(field.getTypeClassName());
+            Collection<ICacheEntryValueField> nestedFields = field.getNested();
+            nestedFields.forEach(nestedField ->
+                    nestedBuilder.setField(nestedField.getName(), extractValueFrom(nestedField)));
+            return nestedBuilder.build();
         }
 
-        BinaryObjectBuilder nestedBuilder = ignite.binary().builder(field.getTypeClassName());
-        Collection<ICacheEntryValueField> nestedFields = field.getNested();
-        nestedFields.forEach(nestedField -> setField(nestedBuilder, nestedField));
-        builder.setField(field.getName(), nestedBuilder.build());
+        return fieldValue.get();
+    }
+
+    private boolean isNoValueField(ICacheEntryValueField field) {
+        Optional<Object> fieldVal = field.getFieldValue();
+        return !fieldVal.isPresent() && !field.hasNested()
+                || TypeUtils.isMap(field.getTypeClassName()) && !fieldVal.isPresent()
+                || TypeUtils.isCollection(field.getTypeClassName()) && !fieldVal.isPresent();
+    }
+
+    private <T> T instantiate(String className) {
+        try {
+            Class<T> clazz = (Class<T>) Class.forName(className);
+            Constructor<?> constructor = clazz.getDeclaredConstructor();
+            return (T) constructor.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private List<ICacheEntryValueField> parseBinaryObject(BinaryObject binaryObject, Map<String, IFieldInfo> binaryObjectFieldsInfo) {
@@ -67,27 +108,49 @@ public class BinaryObjectConverter implements IIgniteDTOConverter<ICacheEntryVal
         for (String fieldName : binaryObjectFieldsInfo.keySet()) {
             IFieldInfo fieldInfo = binaryObjectFieldsInfo.get(fieldName);
 
-            String fieldValueName = fieldInfo.getName();
-            String fieldValueType = fieldInfo.getTypeInfo();
-            CacheEntryValueField valueField;
-            Map<String, IFieldInfo> nestedFieldInfo = fieldInfo.getNested();
-            if (nestedFieldInfo.isEmpty()) {
-                valueField = new CacheEntryValueField.Builder()
-                        .setName(fieldValueName)
-                        .setTypeClassName(fieldValueType)
-                        .setValue(fieldInfo.getFieldDataConverter().convert(binaryObject.field(fieldName)))
-                        .build();
-            } else {
-                valueField = new CacheEntryValueField.Builder()
-                        .setName(fieldValueName)
-                        .setTypeClassName(fieldValueType)
-                        .setNested(parseBinaryObject(binaryObject.field(fieldInfo.getName()), nestedFieldInfo))
-                        .build();
-            }
+            CacheEntryValueField valueField = parseField(binaryObject.field(fieldInfo.getName()), fieldInfo);
+
             cacheValueFieldList.add(valueField);
         }
 
         return cacheValueFieldList;
+    }
+
+    private CacheEntryValueField parseField(Object fieldObj, IFieldInfo fieldInfo) {
+        String fieldValueName = fieldInfo.getName();
+        String fieldValueType = fieldInfo.getTypeInfo();
+        Map<String, IFieldInfo> nestedFieldInfo = fieldInfo.getNested();
+        if (nestedFieldInfo.isEmpty()) {
+            return new CacheEntryValueField.Builder()
+                    .setName(fieldValueName)
+                    .setTypeClassName(fieldValueType)
+                    .setValue(fieldInfo.getFieldDataConverter().convert(fieldObj))
+                    .build();
+        }
+
+        CacheEntryValueField.Builder valueFieldBuilder = new CacheEntryValueField.Builder()
+                .setName(fieldValueName)
+                .setTypeClassName(fieldValueType);
+        if (TypeUtils.isBinaryObject(fieldObj)) {
+            valueFieldBuilder.setNested(parseBinaryObject((BinaryObject) fieldObj, nestedFieldInfo));
+        }
+        if (TypeUtils.isCollection(fieldValueType)) {
+            List<ICacheEntryValueField> list = new ArrayList<>();
+            Collection<?> valueCollection = (Collection<?>) fieldObj;
+            valueCollection.forEach(element ->
+                    list.add(parseField(element, fieldInfo.getNested().get(TypeUtils.VALUE))));
+            valueFieldBuilder.setValue(list);
+        }
+        if (TypeUtils.isMap(fieldValueType)) {
+            Map<ICacheEntryValueField, ICacheEntryValueField> map = new HashMap<>();
+            Map<?, ?> valueMap = (Map<?, ?>) fieldObj;
+            valueMap.forEach((key, val) ->
+                    map.put(parseField(key, fieldInfo.getNested().get(TypeUtils.KEY)),
+                            parseField(val, fieldInfo.getNested().get(TypeUtils.VALUE))));
+            valueFieldBuilder.setValue(map);
+        }
+
+        return valueFieldBuilder.build();
     }
 
 }
