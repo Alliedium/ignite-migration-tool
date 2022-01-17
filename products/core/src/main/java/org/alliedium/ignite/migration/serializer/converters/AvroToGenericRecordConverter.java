@@ -10,9 +10,11 @@ import org.alliedium.ignite.migration.serializer.converters.datatypes.IAvroDeriv
 
 import java.util.*;
 
+import org.alliedium.ignite.migration.util.TypeUtils;
 import org.alliedium.ignite.migration.util.UniqueKey;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.avro.util.Utf8;
 
@@ -52,21 +54,17 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
 
     private ICacheEntryValueField getEntryValueField(Schema.Field field, GenericRecord record) {
         Object fieldVal = record.get(field.name());
+        String fieldTypeClassName = getFieldType(field);
         CacheEntryValueField.Builder builder = new CacheEntryValueField.Builder()
                 .setName(field.name())
-                .setTypeClassName(getFieldType(field));
+                .setTypeClassName(fieldTypeClassName);
 
         if (fieldVal == null) {
             return builder.build();
         }
 
-        if (field.schema().getType().equals(Schema.Type.RECORD)) {
-            List<ICacheEntryValueField> nestedFields = new ArrayList<>();
-            List<Field> nestedAvroFields = field.schema().getFields();
-            nestedAvroFields.forEach(nestedAvroField -> {
-                nestedFields.add(getEntryValueField(nestedAvroField, (GenericRecord) fieldVal));
-            });
-            return builder.setNested(nestedFields).build();
+        if (isSchemaComplex(field.schema())) {
+            return extractComplexEntryValueField(builder, field.schema(), fieldVal);
         }
 
         IAvroDerivedTypeConverter converter = AvroDerivedTypeConverterFactory.get(field);
@@ -78,6 +76,61 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
         return builder.setValue(converter.convertFromAvro(fieldVal)).build();
     }
 
+    /**
+     * Extracts complex entry value field. It Will throw an exception if type is of object is not complex.
+     * Complex types are: records and arrays
+     * A Map is processed like an array because Apache avro supports only maps with string keys,
+     * while map key in java can be any object.
+     *
+     * @param builder - external builder which collects other field values
+     * @param schema - fieldVal avro schema
+     * @param fieldVal - value to be extracted into dto
+     * @return {@link ICacheEntryValueField} extracted from fieldVal or throws IllegalStateException
+     *           in case type of schema is not complex
+     */
+    private ICacheEntryValueField extractComplexEntryValueField(CacheEntryValueField.Builder builder, Schema schema, Object fieldVal) {
+        if (schema.getType().equals(Schema.Type.RECORD)) {
+            List<ICacheEntryValueField> nestedFields = new ArrayList<>();
+            List<Field> nestedAvroFields = schema.getFields();
+            nestedAvroFields.forEach(nestedAvroField -> {
+                nestedFields.add(getEntryValueField(nestedAvroField, (GenericRecord) fieldVal));
+            });
+            return builder.setNested(nestedFields).build();
+        }
+        if (schema.getType().equals(Schema.Type.ARRAY)) {
+            List<ICacheEntryValueField> values = new ArrayList<>();
+            Schema elementSchema = schema.getElementType();
+            GenericArray<GenericRecord> array = (GenericArray<GenericRecord>) fieldVal;
+
+            if (elementSchema.getFields().size() == 2) {
+                Map<ICacheEntryValueField, ICacheEntryValueField> valueMap = new HashMap<>();
+                array.forEach(val -> {
+                    valueMap.put(
+                            getEntryValueField(elementSchema.getField(TypeUtils.KEY), val),
+                            getEntryValueField(elementSchema.getField(TypeUtils.VALUE), val));
+                });
+                return builder.setValue(valueMap).build();
+            }
+
+            array.forEach(val -> {
+                String valueType = getSchemaType(elementSchema);
+                CacheEntryValueField.Builder valueBuilder = new CacheEntryValueField.Builder()
+                        .setName(TypeUtils.VALUE)
+                        .setTypeClassName(valueType);
+                values.add(extractComplexEntryValueField(valueBuilder, elementSchema, val));
+            });
+            return builder.setValue(values).build();
+        }
+
+        throw new IllegalStateException("Complex type not found for schema: " + schema);
+    }
+
+    private boolean isSchemaComplex(Schema schema) {
+        Schema.Type type = schema.getType();
+        return Schema.Type.RECORD.equals(type)
+                || Schema.Type.ARRAY.equals(type);
+    }
+
     private String getFieldType(Schema.Field field) {
         String fieldName = field.name();
         String type = fieldsTypes.get(fieldName);
@@ -85,22 +138,35 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
             type = fieldsTypes.get(fieldName.toUpperCase());
         }
 
-        Schema.Type schemaType = field.schema().getType();
+        return getSchemaType(field.schema(), Optional.ofNullable(type));
+    }
 
+    private String getSchemaType(Schema schema) {
+        return getSchemaType(schema, Optional.empty());
+    }
+
+    // todo: this looks bad, should be improved, we should not guess about types
+    private String getSchemaType(Schema schema, Optional<String> defaultType) {
+        String type = null;
+        Schema.Type schemaType = schema.getType();
+        if (schemaType.equals(Schema.Type.ARRAY)) {
+            return schema.getProp(TypeUtils.FIELD_TYPE);
+        }
         if (schemaType.equals(Schema.Type.RECORD)) {
-            Optional<String> optionalType = UniqueKey.getRecordType(field.schema().getFullName());
+            Optional<String> optionalType = UniqueKey.getRecordType(schema.getFullName());
             if (optionalType.isPresent()) {
                 type = optionalType.get();
             }
         }
         if (schemaType.equals(Schema.Type.UNION)) {
-            List<Schema> types = field.schema().getTypes();
+            List<Schema> types = schema.getTypes();
             if (types.size() > 2) {
                 // todo: a place for improvement
                 throw new UnsupportedOperationException(
                         "more than two types for one schema union are not supported");
             }
-            Optional<Schema> optionalSchema = types.stream().filter(schema -> !schema.getType().equals(Schema.Type.NULL))
+            Optional<Schema> optionalSchema = types.stream()
+                    .filter(unitSchema -> !unitSchema.getType().equals(Schema.Type.NULL))
                     .findFirst();
             if (optionalSchema.isPresent()) {
                 type = optionalSchema.get().getType().getName();
@@ -111,10 +177,13 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
             type = schemaType.getName();
         }
         if (type == null) {
-            type = field.schema().getDoc();
+            type = schema.getDoc();
+        }
+        if (type == null && defaultType.isPresent()) {
+            type = defaultType.get();
         }
         if (type == null) {
-            throw new IllegalStateException("cannot find type for field: " + fieldName);
+            throw new IllegalStateException("cannot extract type from schema: " + schema);
         }
 
         return type;

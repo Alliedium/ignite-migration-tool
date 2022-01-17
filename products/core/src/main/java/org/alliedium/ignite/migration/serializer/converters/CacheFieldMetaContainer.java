@@ -6,8 +6,11 @@ import org.alliedium.ignite.migration.serializer.converters.datatypes.AvroDerive
 import org.alliedium.ignite.migration.serializer.converters.datatypes.IAvroDerivedTypeConverter;
 import org.alliedium.ignite.migration.serializer.converters.schemafields.IAvroSchemaFieldAssembler;
 import org.alliedium.ignite.migration.serializer.converters.schemafields.SchemaFieldAssemblerFactory;
+import org.alliedium.ignite.migration.util.TypeUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Unit contains meta-data as {@link ICacheFieldMeta} for each separate {@link ICacheEntryValueField}.
@@ -32,6 +35,16 @@ public class CacheFieldMetaContainer implements ICacheFieldMetaContainer {
         }
     }
 
+    /**
+     * Creates field meta from provided {@link ICacheEntryValueField}, main purpose to create field meta is
+     * to find appropriate avro schema assembler and types converter from java to avro.
+     * This method will create metadata for provided field as well as for it's nested fields.
+     * Collections and Maps are treated as they have nested fields. This is done in order to combine
+     * nested objects architecture and collections/maps cause there could be even nested collections inside.
+     *
+     * @param field
+     * @return cache field metadata with all nested fields
+     */
     private CacheFieldMeta createFieldMeta(ICacheEntryValueField field) {
         String fieldName = field.getName();
         String fieldAvroType = field.getTypeClassName();
@@ -48,6 +61,37 @@ public class CacheFieldMetaContainer implements ICacheFieldMetaContainer {
                     .setFieldType(fieldAvroType)
                     .build();
         }
+        if (TypeUtils.isCollection(fieldAvroType) && field.getFieldValue().isPresent()) {
+            Collection<ICacheEntryValueField> collection = (Collection<ICacheEntryValueField>) field.getFieldValue().get();
+            ICacheEntryValueField elementField = collection.iterator().next();
+            ICacheFieldMeta elementFieldMeta = createFieldMeta(elementField);
+            IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(fieldAvroType);
+            IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(fieldAvroType);
+            return new CacheFieldMeta.Builder()
+                    .setFieldName(fieldName)
+                    .setAvroSchemaFieldAssembler(avroSchemaFieldAssembler)
+                    .setAvroDerivedTypeConverter(avroDerivedTypeConverter)
+                    .setNested(Stream.of(elementFieldMeta).collect(Collectors.toList()))
+                    .setFieldType(fieldAvroType)
+                    .build();
+        }
+        if (TypeUtils.isMap(fieldAvroType) && field.getFieldValue().isPresent()) {
+            Map<ICacheEntryValueField, ICacheEntryValueField> map = (Map<ICacheEntryValueField, ICacheEntryValueField>) field.getFieldValue().get();
+            ICacheEntryValueField elementKeyField = map.keySet().iterator().next();
+            ICacheFieldMeta elementKeyFieldMeta = createFieldMeta(elementKeyField);
+            ICacheEntryValueField valueKeyField = map.values().iterator().next();
+            ICacheFieldMeta elementValueFieldMeta = createFieldMeta(valueKeyField);
+            IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(fieldAvroType);
+            IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(fieldAvroType);
+            return new CacheFieldMeta.Builder()
+                    .setFieldName(fieldName)
+                    .setAvroSchemaFieldAssembler(avroSchemaFieldAssembler)
+                    .setAvroDerivedTypeConverter(avroDerivedTypeConverter)
+                    .setNested(Stream.of(elementKeyFieldMeta, elementValueFieldMeta).collect(Collectors.toList()))
+                    .setFieldType(fieldAvroType)
+                    .build();
+        }
+
         IAvroSchemaFieldAssembler avroSchemaFieldAssembler = SchemaFieldAssemblerFactory.get(fieldAvroType);
         IAvroDerivedTypeConverter avroDerivedTypeConverter = AvroDerivedTypeConverterFactory.get(fieldAvroType);
         return new CacheFieldMeta.Builder()

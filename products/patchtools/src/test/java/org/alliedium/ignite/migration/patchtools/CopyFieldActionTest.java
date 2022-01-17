@@ -1,6 +1,5 @@
 package org.alliedium.ignite.migration.patchtools;
 
-import org.alliedium.ignite.migration.test.TestUtils;
 import org.alliedium.ignite.migration.test.model.IdContainer;
 import org.alliedium.ignite.migration.test.model.Passport;
 import org.alliedium.ignite.migration.test.model.Person;
@@ -55,9 +54,7 @@ public class CopyFieldActionTest extends IsolatedIgniteNodePerTest {
 
     @Test
     public void testCopyNestedField(Method method) {
-        // todo: try to run this code two times and you will get error, because ignite will remember field `secondPassport`
-        // which was created at first run. This should be fixed, because the same issue can appear in other tests
-        String cacheName = TestUtils.getMethodName(getClass(), method);
+        String cacheName = method.toString();
         CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration = new CacheConfiguration<>();
         cacheConfiguration.setName(cacheName);
 

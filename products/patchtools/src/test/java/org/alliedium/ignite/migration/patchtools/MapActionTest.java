@@ -1,6 +1,5 @@
 package org.alliedium.ignite.migration.patchtools;
 
-import org.alliedium.ignite.migration.test.TestUtils;
 import org.alliedium.ignite.migration.test.model.IdContainer;
 import org.alliedium.ignite.migration.test.model.Passport;
 import org.alliedium.ignite.migration.test.model.Person;
@@ -59,7 +58,7 @@ public class MapActionTest extends BaseTest {
 
     @Test
     public void testChangeNestedObjects(Method method) {
-        String cacheName = TestUtils.getMethodName(getClass(), method);
+        String cacheName = method.toString();
         CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration = new CacheConfiguration<>();
         cacheConfiguration.setName(cacheName);
 

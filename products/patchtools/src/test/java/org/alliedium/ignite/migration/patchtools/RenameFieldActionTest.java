@@ -1,6 +1,5 @@
 package org.alliedium.ignite.migration.patchtools;
 
-import org.alliedium.ignite.migration.test.TestUtils;
 import org.alliedium.ignite.migration.test.model.IdContainer;
 import org.alliedium.ignite.migration.test.model.Passport;
 import org.alliedium.ignite.migration.test.model.Person;
@@ -55,7 +54,7 @@ public class RenameFieldActionTest extends IsolatedIgniteNodePerTest {
 
     @Test
     public void testRenameNestedField(Method method) {
-        String cacheName = TestUtils.getMethodName(getClass(), method);
+        String cacheName = method.toString();
         CacheConfiguration<AffinityKey<Integer>, Person> cacheConfiguration = new CacheConfiguration<>();
         cacheConfiguration.setName(cacheName);
 

@@ -6,13 +6,17 @@ import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
 import org.alliedium.ignite.migration.serializer.converters.datatypes.AvroDerivedTypeConverterFactory;
 import org.alliedium.ignite.migration.serializer.utils.FieldNames;
+import org.alliedium.ignite.migration.util.TypeUtils;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileWriter;
+import org.apache.avro.generic.GenericArray;
 import org.apache.avro.generic.GenericData;
 import org.apache.avro.generic.GenericRecord;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class CacheDataWriter implements IDataWriter<ICacheData> {
@@ -78,12 +82,38 @@ public class CacheDataWriter implements IDataWriter<ICacheData> {
         String fieldName = field.getName();
         Optional<Object> fieldValue = field.getFieldValue();
         if (field.hasNested()) {
-            Schema nestedSchema = schema.getField(fieldName).schema();
+            Schema nestedSchema = Schema.Type.RECORD.equals(schema.getType()) ?
+                    schema.getField(fieldName).schema() : schema.getElementType();
             GenericRecord nestedRecord = new GenericData.Record(nestedSchema);
             field.getNested().forEach(nested -> {
                 nestedRecord.put(nested.getName(), getFieldObject(nested, nestedSchema));
             });
             return nestedRecord;
+        }
+        if (TypeUtils.isCollection(field.getTypeClassName())) {
+            Schema arraySchema = schema.getField(fieldName).schema();
+            GenericData.Array<Object> array = new GenericData.Array<>(0, arraySchema);
+            List<ICacheEntryValueField> valueFields = (List<ICacheEntryValueField>) field.getFieldValue().get();
+            valueFields.forEach(valueField ->
+                    array.add(getFieldObject(valueField, arraySchema)));
+            return array;
+        }
+        if (TypeUtils.isMap(field.getTypeClassName())) {
+            Schema arraySchema = schema.getField(fieldName).schema();
+            GenericData.Array<GenericRecord> array = new GenericData.Array<>(0, arraySchema);
+            Schema arrayElementSchema = arraySchema.getElementType();
+            Map<ICacheEntryValueField, ICacheEntryValueField> valueFields =
+                    (Map<ICacheEntryValueField, ICacheEntryValueField>) field.getFieldValue().get();
+            valueFields.forEach((key, value) -> {
+                GenericRecord pair = new GenericData.Record(arrayElementSchema);
+                Object resultVal = getFieldObject(value, arrayElementSchema);
+                Object resultKey = getFieldObject(key, arrayElementSchema);
+                pair.put(key.getName(), resultKey);
+                pair.put(value.getName(), resultVal);
+                array.add(pair);
+            });
+
+            return array;
         }
 
         if (fieldValue.isPresent()) {

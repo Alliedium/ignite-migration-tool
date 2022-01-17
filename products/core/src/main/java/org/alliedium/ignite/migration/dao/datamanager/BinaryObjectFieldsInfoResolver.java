@@ -7,6 +7,7 @@ import org.alliedium.ignite.migration.dao.converters.PlainObjectProviderDataConv
 import java.util.*;
 
 import org.alliedium.ignite.migration.dao.converters.TypesResolver;
+import org.alliedium.ignite.migration.util.TypeUtils;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.affinity.AffinityKey;
 import org.apache.ignite.internal.binary.BinaryEnumObjectImpl;
@@ -34,10 +35,13 @@ public class BinaryObjectFieldsInfoResolver implements IBinaryObjectFieldInfoRes
         return extractFieldsInfo(binaryObject);
     }
 
-    private FieldInfo createFieldInfo(BinaryObject binaryObject, String fieldName) {
-        String typeInfo = resolveType(binaryObject, fieldName);
-        Optional<Class<?>> fieldClazzOptional = loadClassIfPossible(typeInfo);
+    private FieldInfo createFieldInfo(BinaryObject fieldsContainer, String fieldName) {
+        String fieldType = resolveType(fieldsContainer, fieldName);
+        return createFieldInfo(fieldsContainer.field(fieldName), fieldType, fieldName);
+    }
 
+    private FieldInfo createFieldInfo(Object field, String fieldType, String fieldName) {
+        Optional<Class<?>> fieldClazzOptional = TypeUtils.loadClassIfPossible(fieldType);
         IIgniteBinaryDataConverter fieldDataConverter;
         if (fieldClazzOptional.isPresent() && BinaryEnumObjectImpl.class.isAssignableFrom(fieldClazzOptional.get())) {
             fieldDataConverter = new IgniteEnumDataConverter();
@@ -46,16 +50,20 @@ public class BinaryObjectFieldsInfoResolver implements IBinaryObjectFieldInfoRes
         }
 
         Map<String, IFieldInfo> nested = new HashMap<>();
-        if (isBinaryObject(binaryObject.field(fieldName))) {
-            nested = extractFieldsInfo(binaryObject.field(fieldName));
+        if (TypeUtils.isBinaryObject(field)) {
+            nested = extractFieldsInfo((BinaryObject) field);
+        } else if (TypeUtils.isCollection(fieldType)) {
+            nested = extractFieldsInfo((Collection<?>) field);
+        } else if (TypeUtils.isMap(fieldType)) {
+            nested = extractFieldsInfo((Map<?, ?>) field);
         }
 
         // todo: type info conversion from java to avro should be placed not here.
-        typeInfo = nested.isEmpty() ? TypesResolver.toAvroType(typeInfo) : typeInfo;
+        fieldType = nested.isEmpty() ? TypesResolver.toAvroType(fieldType) : fieldType;
 
         return new FieldInfo.Builder()
                 .setName(fieldName)
-                .setTypeInfo(typeInfo)
+                .setTypeInfo(fieldType)
                 .setNested(nested)
                 .setBinaryObjectFieldDataConverter(fieldDataConverter)
                 .build();
@@ -70,16 +78,62 @@ public class BinaryObjectFieldsInfoResolver implements IBinaryObjectFieldInfoRes
         return fieldsInfo;
     }
 
-    private String resolveType(BinaryObject binaryObject, String fieldName) {
-        if (isBinaryObject(binaryObject.field(fieldName))) {
-            return ((BinaryObject) binaryObject.field(fieldName)).type().typeName();
+    private Map<String, IFieldInfo> extractFieldsInfo(Collection<?> collection) {
+        if (!collection.iterator().hasNext()) {
+            return Collections.emptyMap();
+        }
+        Optional<?> optional = collection.stream().filter(Objects::nonNull).findFirst();
+        if (!optional.isPresent()) {
+            return Collections.emptyMap();
         }
 
-        return binaryObject.field(fieldName) == null ?
-                isAffinityKey(binaryObject)
+        Object value = optional.get();
+        String valueType = resolveType(value);
+        Map<String, IFieldInfo> fieldsInfo = new HashMap<>();
+        fieldsInfo.put(TypeUtils.VALUE, createFieldInfo(value, valueType, TypeUtils.VALUE));
+
+        return fieldsInfo;
+    }
+
+    private Map<String, IFieldInfo> extractFieldsInfo(Map<?, ?> map) {
+        if (map.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Optional<?> optionalKey = map.keySet().stream().filter(Objects::nonNull).findFirst();
+        Optional<?> optionalVal = map.values().stream().filter(Objects::nonNull).findFirst();
+        if (!optionalKey.isPresent() || !optionalVal.isPresent()) {
+            return Collections.emptyMap();
+        }
+
+        Object key = optionalKey.get();
+        String keyType = resolveType(key);
+        Object value = optionalVal.get();
+        String valueType = resolveType(value);
+
+        Map<String, IFieldInfo> fieldsInfo = new HashMap<>();
+        fieldsInfo.put(TypeUtils.KEY, createFieldInfo(key, keyType, TypeUtils.KEY));
+        fieldsInfo.put(TypeUtils.VALUE, createFieldInfo(value, valueType, TypeUtils.VALUE));
+
+        return fieldsInfo;
+    }
+
+    private String resolveType(BinaryObject fieldsContainer, String fieldName) {
+        if (TypeUtils.isBinaryObject(fieldsContainer.field(fieldName))) {
+            return ((BinaryObject) fieldsContainer.field(fieldName)).type().typeName();
+        }
+
+        return fieldsContainer.field(fieldName) == null ?
+                isAffinityKey(fieldsContainer)
                         ? getAffinityKeyFieldType(fieldName)
-                        : binaryObject.type().fieldTypeName(fieldName)
-                : binaryObject.field(fieldName).getClass().getName();
+                        : fieldsContainer.type().fieldTypeName(fieldName)
+                : fieldsContainer.field(fieldName).getClass().getName();
+    }
+
+    private String resolveType(Object obj) {
+        if (TypeUtils.isBinaryObject(obj)) {
+            return ((BinaryObject) obj).type().typeName();
+        }
+        return obj.getClass().getName();
     }
 
     private String getAffinityKeyFieldType(String fieldName) {
@@ -88,18 +142,5 @@ public class BinaryObjectFieldsInfoResolver implements IBinaryObjectFieldInfoRes
         } catch (NoSuchFieldException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    private Optional<Class<?>> loadClassIfPossible(String className) {
-        try {
-            return Optional.of(Class.forName(className));
-        } catch (ClassNotFoundException e) {
-            // do nothing
-        }
-        return Optional.empty();
-    }
-
-    private boolean isBinaryObject(Object obj) {
-        return obj != null && BinaryObject.class.isAssignableFrom(obj.getClass());
     }
 }
