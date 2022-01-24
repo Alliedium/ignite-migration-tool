@@ -1,4 +1,4 @@
-FROM apacheignite/ignite:2.11.0
+FROM apacheignite/ignite:2.12.0
 ARG IGNITE_DOCKER_JVM_OPTS
 
 COPY ./core/config/server.xml /app/config/
