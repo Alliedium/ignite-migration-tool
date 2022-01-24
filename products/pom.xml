@@ -16,7 +16,7 @@
         <repoDirectory>repo</repoDirectory>
 
         <surefire.version>3.0.0-M5</surefire.version>
-        <ignite.version>2.11.0</ignite.version>
+        <ignite.version>2.12.0</ignite.version>
         <project.version>1.0.0</project.version>
     </properties>
     <modules>
