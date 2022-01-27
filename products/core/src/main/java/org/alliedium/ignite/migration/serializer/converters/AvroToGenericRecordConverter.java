@@ -11,7 +11,6 @@ import org.alliedium.ignite.migration.serializer.converters.datatypes.IAvroDeriv
 import java.util.*;
 
 import org.alliedium.ignite.migration.util.TypeUtils;
-import org.alliedium.ignite.migration.util.UniqueKey;
 import org.apache.avro.Schema;
 import org.apache.avro.Schema.Field;
 import org.apache.avro.generic.GenericArray;
@@ -63,7 +62,7 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
             return builder.build();
         }
 
-        if (isSchemaComplex(field.schema())) {
+        if (isArrayOrRecordSchema(field.schema())) {
             return extractComplexEntryValueField(builder, field.schema(), fieldVal);
         }
 
@@ -125,7 +124,7 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
         throw new IllegalStateException("Complex type not found for schema: " + schema);
     }
 
-    private boolean isSchemaComplex(Schema schema) {
+    private boolean isArrayOrRecordSchema(Schema schema) {
         Schema.Type type = schema.getType();
         return Schema.Type.RECORD.equals(type)
                 || Schema.Type.ARRAY.equals(type);
@@ -145,23 +144,16 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
         return getSchemaType(schema, Optional.empty());
     }
 
-    // todo: this looks bad, should be improved, we should not guess about types
     private String getSchemaType(Schema schema, Optional<String> defaultType) {
-        String type = null;
-        Schema.Type schemaType = schema.getType();
-        if (schemaType.equals(Schema.Type.ARRAY)) {
+        if (isArrayOrRecordSchema(schema)) {
             return schema.getProp(TypeUtils.FIELD_TYPE);
         }
-        if (schemaType.equals(Schema.Type.RECORD)) {
-            Optional<String> optionalType = UniqueKey.getRecordType(schema.getFullName());
-            if (optionalType.isPresent()) {
-                type = optionalType.get();
-            }
-        }
+
+        Schema.Type schemaType = schema.getType();
+        String type = null;
         if (schemaType.equals(Schema.Type.UNION)) {
             List<Schema> types = schema.getTypes();
             if (types.size() > 2) {
-                // todo: a place for improvement
                 throw new UnsupportedOperationException(
                         "more than two types for one schema union are not supported");
             }
@@ -171,13 +163,6 @@ public class AvroToGenericRecordConverter implements IAvroToGenericRecordConvert
             if (optionalSchema.isPresent()) {
                 type = optionalSchema.get().getType().getName();
             }
-        }
-        if (type == null && !schemaType.equals(Schema.Type.RECORD)
-                && !schemaType.equals(Schema.Type.UNION)) {
-            type = schemaType.getName();
-        }
-        if (type == null) {
-            type = schema.getDoc();
         }
         if (type == null && defaultType.isPresent()) {
             type = defaultType.get();

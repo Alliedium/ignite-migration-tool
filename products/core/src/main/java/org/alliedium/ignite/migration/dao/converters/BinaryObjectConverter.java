@@ -7,7 +7,6 @@ import org.alliedium.ignite.migration.dto.ICacheEntryValue;
 import org.alliedium.ignite.migration.dto.ICacheEntryValueField;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import org.alliedium.ignite.migration.util.TypeUtils;

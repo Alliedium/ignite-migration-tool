@@ -10,7 +10,7 @@ class MapAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
     @Override
     public void assembleAvroSchemaField(SchemaBuilder.FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta) {
         final SchemaBuilder.FieldAssembler<Schema> mapElementsFieldAssembler = SchemaBuilder
-                .record(UniqueKey.generateWithRecordType(fieldMeta.getFieldType()))
+                .record(UniqueKey.generate())
                 .fields();
 
         fieldMeta.getNested().forEach((fieldName, nestedFieldMeta) -> {

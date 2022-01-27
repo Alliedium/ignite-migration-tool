@@ -1,12 +1,12 @@
 package org.alliedium.ignite.migration.serializer.converters.schemafields;
 
 import org.alliedium.ignite.migration.serializer.converters.ICacheFieldMeta;
+import org.alliedium.ignite.migration.util.TypeUtils;
 import org.alliedium.ignite.migration.util.UniqueKey;
 import org.apache.avro.Schema;
 import org.apache.avro.SchemaBuilder;
 
 import java.util.List;
-import java.util.UUID;
 
 class NestedAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
 
@@ -19,7 +19,7 @@ class NestedAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
     @Override
     public void assembleAvroSchemaField(SchemaBuilder.FieldAssembler<Schema> fieldAssembler, ICacheFieldMeta fieldMeta) {
         final SchemaBuilder.FieldAssembler<Schema> nestedFieldAssembler = SchemaBuilder
-                .record(generateUniqueRecordName(fieldMeta.getFieldType()))
+                .record(UniqueKey.generate())
                 .fields();
 
         fieldMetaList.forEach(nestedFieldMeta -> {
@@ -27,10 +27,7 @@ class NestedAvroSchemaFieldAssembler implements IAvroSchemaFieldAssembler {
         });
 
         Schema nestedSchema = nestedFieldAssembler.endRecord();
+        nestedSchema.addProp(TypeUtils.FIELD_TYPE, fieldMeta.getFieldType());
         fieldAssembler.name(fieldMeta.getName()).type(nestedSchema).noDefault();
-    }
-
-    private String generateUniqueRecordName(String fieldType) {
-        return UniqueKey.generateWithRecordType(fieldType);
     }
 }
