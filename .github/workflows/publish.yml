@@ -1,0 +1,43 @@
+name: Publish modules to the Maven Central Repository and GitHub Packages
+on:
+  release:
+    types: [created]
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java for publishing to Maven Central Repository
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+          server-id: ossrh
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Publish to the Maven Central Repository
+        run: mvn -Ppublish,central --batch-mode deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+
+      - name: Set up Java for publishing to GitHub Packages
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Publish to GitHub Packages
+        run: mvn -Ppublish,github --batch-mode deploy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

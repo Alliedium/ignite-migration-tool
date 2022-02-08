@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.alliedium.ignite.migration</groupId>
     <artifactId>alliedium-ignite-migration-tool</artifactId>
-    <version>${project.version}</version>
+    <version>0.0.1</version>
     <packaging>pom</packaging>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -17,16 +17,65 @@
 
         <surefire.version>3.0.0-M5</surefire.version>
         <ignite.version>2.12.0</ignite.version>
-        <project.version>1.0.0</project.version>
     </properties>
-    <modules>
-        <module>core</module>
-        <module>demo</module>
-        <module>igniteactivator</module>
-        <module>test</module>
-        <module>common</module>
-        <module>patchtools</module>
-    </modules>
+
+    <name>Apache Ignite Migration Tool</name>
+    <description>Apache Ignite Migration Tool is an open-source library
+        for applying Apache Ignite database schema changes.</description>
+    <url>https://github.com/Alliedium/ignite-migration-tool</url>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <profiles>
+        <profile>
+            <id>default</id>
+            <modules>
+                <module>core</module>
+                <module>demo</module>
+                <module>igniteactivator</module>
+                <module>test</module>
+                <module>common</module>
+                <module>patchtools</module>
+            </modules>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <!-- The publish profile serves to confine modules which should be published -->
+            <id>publish</id>
+            <modules>
+                <module>core</module>
+                <module>common</module>
+                <module>patchtools</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>github</id>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <name>GitHub Packages</name>
+                    <url>https://maven.pkg.github.com/Alliedium/ignite-migration-tool</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>central</id>
+            <distributionManagement>
+                <repository>
+                    <id>ossrh</id>
+                    <name>Central Repository OSSRH</name>
+                    <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+    </profiles>
+
     <dependencyManagement>
         <dependencies>
             <dependency>
