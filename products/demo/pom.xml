@@ -28,7 +28,7 @@
     <parent>
         <groupId>org.alliedium.ignite.migration</groupId>
         <artifactId>alliedium-ignite-migration-tool</artifactId>
-        <version>${project.version}</version>
+        <version>0.0.1</version>
     </parent>
     <artifactId>demo</artifactId>
 
@@ -51,19 +51,19 @@
         <dependency>
             <groupId>org.alliedium.ignite.migration</groupId>
             <artifactId>core</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.alliedium.ignite.migration</groupId>
             <artifactId>test</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.alliedium.ignite.migration</groupId>
             <artifactId>patchtools</artifactId>
-            <version>${project.version}</version>
+            <version>0.0.1</version>
         </dependency>
 
         <dependency>

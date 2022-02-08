@@ -17,7 +17,7 @@ sleep 10
 #
 JAVA_OPT="-DIGNITE_HOME=$(pwd)/core/ignite -DIGNITE_LOG_DIR=$(pwd)/demo/logs \
   -DIGNITE_CONFIG_HOME=file:$(pwd)/core/config"
-TOOL_CLASSPATH="$(pwd)/demo/target/demo-1.0.0-jar-with-dependencies.jar"
+TOOL_CLASSPATH="$(pwd)/demo/target/demo-0.0.1-jar-with-dependencies.jar"
 
 executeStep() {
   echo "---- step started: $1 ----"

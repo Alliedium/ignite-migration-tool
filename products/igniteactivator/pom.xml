@@ -29,7 +29,7 @@
     <parent>
         <groupId>org.alliedium.ignite.migration</groupId>
         <artifactId>alliedium-ignite-migration-tool</artifactId>
-        <version>${project.version}</version>
+        <version>0.0.1</version>
     </parent>
     <artifactId>igniteactivator</artifactId>
 
