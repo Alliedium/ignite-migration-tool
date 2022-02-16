@@ -10,7 +10,7 @@ COPY ./core/ignite/config/ignite-log4j.xml /app/ignite/config/
 
 RUN cd /app/igniteactivator/ \
     && mvn -B clean package \
-    && cp -f /app/igniteactivator/target/igniteactivator-0.0.1-jar-with-dependencies.jar /app/
+    && cp -f /app/igniteactivator/target/igniteactivator-*-jar-with-dependencies.jar /app/
 
 ENV IGNITE_HOST=ignite
 ENV ACTIVATOR_ADD_ARGS=${ACTIVATOR_ADD_ARGS}
@@ -20,4 +20,4 @@ WORKDIR /app/
 
 ENTRYPOINT cd /app && \
            java -Djava.net.preferIPv4Stack=true $ADD_JVM_OPTS \
-             -jar ./igniteactivator-0.0.1-jar-with-dependencies.jar -n $IGNITE_NODES $ACTIVATOR_ADD_ARGS
+             -jar ./igniteactivator-*-jar-with-dependencies.jar -n $IGNITE_NODES $ACTIVATOR_ADD_ARGS
