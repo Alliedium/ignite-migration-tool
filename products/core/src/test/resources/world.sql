@@ -18,7 +18,7 @@ CREATE TABLE Country (
                          HeadOfState VARCHAR,
                          Capital INT,
                          Code2 CHAR(2)
-) WITH "template=partitioned, backups=1, CACHE_NAME=Country, VALUE_TYPE=org.alliedium.ignite.migration.test.model.Country";
+) WITH "template=partitioned, backups=1, CACHE_NAME=Country, VALUE_TYPE=Country";
 
 DROP TABLE IF EXISTS City;
 
@@ -29,7 +29,7 @@ CREATE TABLE City (
                       District VARCHAR,
                       Population INT,
                       PRIMARY KEY (ID, CountryCode)
-) WITH "template=partitioned, backups=1, affinityKey=CountryCode, CACHE_NAME=City, KEY_TYPE=org.alliedium.ignite.migration.test.model.CityKey, VALUE_TYPE=org.alliedium.ignite.migration.test.model.City";
+) WITH "template=partitioned, backups=1, affinityKey=CountryCode, CACHE_NAME=City, KEY_TYPE=CityKey, VALUE_TYPE=City";
 
 CREATE INDEX idx_country_code ON city (CountryCode);
 
@@ -41,7 +41,7 @@ CREATE TABLE CountryLanguage (
                                  IsOfficial CHAR(2),
                                  Percentage DOUBLE,--DECIMAL(4,1),
                                  PRIMARY KEY (CountryCode, Language)
-) WITH "template=partitioned, backups=1, affinityKey=CountryCode, CACHE_NAME=CountryLng, KEY_TYPE=org.alliedium.ignite.migration.test.model.CountryLngKey, VALUE_TYPE=org.alliedium.ignite.migration.test.model.CountryLng";
+) WITH "template=partitioned, backups=1, affinityKey=CountryCode, CACHE_NAME=CountryLng, KEY_TYPE=CountryLngKey, VALUE_TYPE=CountryLng";
 CREATE INDEX idx_lang_country_code ON CountryLanguage (CountryCode);
 
 SET STREAMING ON;

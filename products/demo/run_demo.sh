@@ -28,7 +28,7 @@ executeStep() {
 # populate the cluster with test data, then export all data and meta data from the 
 #   cluster into an isolated directory in form of Avro files
 #
-executeStep org.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro ./avro_original
+executeStep io.github.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro ./avro_original
 
 # stop Apache Ignite cluster to stress that Avro files provide a self-sufficient snapshot of the data
 #
@@ -37,7 +37,7 @@ docker-compose down
 # apply a simple transformation
 # (adding a new field to first cache, removing another field from second cache) to Avro files
 #
-executeStep org.alliedium.ignite.migration.patches.AlterCachesDemoPatch ./avro_original ./avro_transformed
+executeStep io.github.alliedium.ignite.migration.patches.AlterCachesDemoPatch ./avro_original ./avro_transformed
 
 # start a new Apache Ignite cluster
 #
@@ -48,7 +48,7 @@ sleep 10
 
 # upload the transformed Avro files to the cluster
 #
-executeStep org.alliedium.ignite.migration.demotools.LoadDataFromAvroAndCheckPatchApplied ./avro_transformed
+executeStep io.github.alliedium.ignite.migration.demotools.LoadDataFromAvroAndCheckPatchApplied ./avro_transformed
 
 # shutdown the cluster
 #

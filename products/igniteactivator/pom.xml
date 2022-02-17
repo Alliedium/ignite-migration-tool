@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.alliedium.ignite.migration</groupId>
+        <groupId>io.github.alliedium.ignite.migration</groupId>
         <artifactId>alliedium-ignite-migration-tool</artifactId>
         <version>0.0.1</version>
     </parent>
@@ -81,7 +81,7 @@
                   <archive>
                     <manifest>
                       <addClasspath>true</addClasspath>
-                      <mainClass>org.alliedium.ignite.migration.DbActivator</mainClass>
+                      <mainClass>io.github.alliedium.ignite.migration.DbActivator</mainClass>
                     </manifest>
                   </archive>
                   <descriptorRefs>
@@ -97,7 +97,7 @@
                 <archive>
                   <manifest>
                     <addClasspath>true</addClasspath>
-                    <mainClass>org.alliedium.ignite.migration.DbActivator</mainClass>
+                    <mainClass>io.github.alliedium.ignite.migration.DbActivator</mainClass>
                   </manifest>
                 </archive>
               </configuration>

@@ -27,7 +27,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.alliedium.ignite.migration</groupId>
+        <groupId>io.github.alliedium.ignite.migration</groupId>
         <artifactId>alliedium-ignite-migration-tool</artifactId>
         <version>0.0.1</version>
     </parent>
@@ -35,7 +35,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.alliedium.ignite.migration</groupId>
+            <groupId>io.github.alliedium.ignite.migration</groupId>
             <artifactId>common</artifactId>
             <version>0.0.1</version>
         </dependency>
@@ -92,7 +92,7 @@
 
             <dependencies>
                 <dependency>
-                    <groupId>org.alliedium.ignite.migration</groupId>
+                    <groupId>io.github.alliedium.ignite.migration</groupId>
                     <artifactId>test</artifactId>
                     <version>0.0.1</version>
                     <scope>test</scope>
@@ -189,7 +189,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>org.alliedium.ignite.migration.CLI</mainClass>
+                            <mainClass>io.github.alliedium.ignite.migration.CLI</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

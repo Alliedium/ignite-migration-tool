@@ -26,7 +26,7 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.alliedium.ignite.migration</groupId>
+        <groupId>io.github.alliedium.ignite.migration</groupId>
         <artifactId>alliedium-ignite-migration-tool</artifactId>
         <version>0.0.1</version>
     </parent>
@@ -49,19 +49,19 @@
         </dependency>
 
         <dependency>
-            <groupId>org.alliedium.ignite.migration</groupId>
+            <groupId>io.github.alliedium.ignite.migration</groupId>
             <artifactId>core</artifactId>
             <version>0.0.1</version>
         </dependency>
 
         <dependency>
-            <groupId>org.alliedium.ignite.migration</groupId>
+            <groupId>io.github.alliedium.ignite.migration</groupId>
             <artifactId>test</artifactId>
             <version>0.0.1</version>
         </dependency>
 
         <dependency>
-            <groupId>org.alliedium.ignite.migration</groupId>
+            <groupId>io.github.alliedium.ignite.migration</groupId>
             <artifactId>patchtools</artifactId>
             <version>0.0.1</version>
         </dependency>
@@ -93,7 +93,7 @@
                   <archive>
                     <manifest>
                       <addClasspath>true</addClasspath>
-                      <mainClass>org.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                      <mainClass>io.github.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
                     </manifest>
                   </archive>
                   <descriptorRefs>
@@ -109,7 +109,7 @@
                 <archive>
                   <manifest>
                     <addClasspath>true</addClasspath>
-                    <mainClass>org.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                    <mainClass>io.github.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
                   </manifest>
                 </archive>
               </configuration>
