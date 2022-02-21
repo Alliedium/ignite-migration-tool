@@ -31,6 +31,8 @@ public class Controller {
     private final IgniteWritersFactory igniteWriter;
     private final IIgniteDAO igniteDAO;
     private final DispatcherFactory dispatcherFactory;
+    private final Ignite ignite;
+    private final PropertiesResolver propertiesResolver;
 
     public Controller(Ignite ignite, IgniteAtomicLongNamesProvider atomicNamesProvider) {
         this(ignite, atomicNamesProvider, PropertiesResolver.loadProperties());
@@ -41,6 +43,8 @@ public class Controller {
         igniteWriter = new IgniteWritersFactoryImpl(ignite);
         igniteDAO = new IgniteDAO(ignite);
         this.dispatcherFactory = new DispatcherFactory(propertiesResolver);
+        this.ignite = ignite;
+        this.propertiesResolver = propertiesResolver;
     }
 
     /**
@@ -60,8 +64,11 @@ public class Controller {
 
         Runnable scanner = () -> igniteScanner.read(igniteDAO, cacheMetaDataDispatcher, cacheDataDispatcher, atomicsLongDispatcher);
 
-        TasksExecutor.execute(scanner, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher)
-                .waitForCompletion();
+        TasksExecutor executor = TasksExecutor.execute(scanner, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher);
+        if (propertiesResolver.closeIgniteInstanceAfterRun()) {
+            executor.registerResourcesToCloseOnShutdown(ignite);
+        }
+        executor.waitForCompletion();
     }
 
     /**
@@ -96,7 +103,10 @@ public class Controller {
             avroDeserializer.deserializeAtomicsLong(atomicsLongDispatcher);
         };
 
-        TasksExecutor.execute(deserializer, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher)
-                .waitForCompletion();
+        TasksExecutor executor = TasksExecutor.execute(deserializer, cacheDataDispatcher, cacheMetaDataDispatcher, atomicsLongDispatcher);
+        if (propertiesResolver.closeIgniteInstanceAfterRun()) {
+            executor.registerResourcesToCloseOnShutdown(ignite);
+        }
+        executor.waitForCompletion();
     }
 }
