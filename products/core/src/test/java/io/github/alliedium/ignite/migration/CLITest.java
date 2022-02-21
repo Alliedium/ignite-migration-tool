@@ -39,6 +39,7 @@ public class CLITest extends ClientIgniteBaseTest {
 
         File propsFile = createNewPropFile();
         Properties properties = new Properties();
+        setCloseIgniteInstanceAfterRun(properties);
         properties.setProperty(PropertyNames.ATOMIC_LONG_NAMES_PROPERTY,
                 String.join(",", atomicLongs.keySet()));
         try(FileOutputStream outputStream = new FileOutputStream(propsFile)) {
@@ -66,6 +67,7 @@ public class CLITest extends ClientIgniteBaseTest {
         List<City> cityList = clientAPI.createTestCityCacheAndInsertData(cacheName, 100);
         File propsFile = createNewPropFile();
         Properties properties = new Properties();
+        setCloseIgniteInstanceAfterRun(properties);
         properties.setProperty(PropertyNames.DISPATCHERS_ELEMENTS_LIMIT, "10");
         try(FileOutputStream outputStream = new FileOutputStream(propsFile)) {
             properties.store(outputStream, null);
@@ -86,6 +88,7 @@ public class CLITest extends ClientIgniteBaseTest {
     public void testWrongFormatForDispatcherElementsLimit() throws IOException {
         File propsFile = createNewPropFile();
         Properties properties = new Properties();
+        setCloseIgniteInstanceAfterRun(properties);
         properties.setProperty(PropertyNames.DISPATCHERS_ELEMENTS_LIMIT, "k10l");
         try (FileOutputStream outputStream = new FileOutputStream(propsFile)) {
             properties.store(outputStream, null);
@@ -117,5 +120,9 @@ public class CLITest extends ClientIgniteBaseTest {
 
     private String getRandomPropertiesFileName() {
         return String.format("ignite-migration-tool-%d-%d.properties", random.nextInt(), System.nanoTime());
+    }
+
+    private void setCloseIgniteInstanceAfterRun(Properties properties) {
+        properties.setProperty(PropertyNames.CLOSE_IGNITE_INSTANCE_AFTER_RUN, "false");
     }
 }

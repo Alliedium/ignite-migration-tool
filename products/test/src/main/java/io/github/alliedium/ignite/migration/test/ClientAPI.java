@@ -8,6 +8,7 @@ import org.apache.ignite.Ignition;
 import org.apache.ignite.cache.QueryEntity;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +24,8 @@ public class ClientAPI {
 
     private ClientAPI(IgniteConfiguration igniteConfiguration) {
         testDirectories = new TestDirectories();
-        ignite = Ignition.getOrStart(igniteConfiguration);
+        ignite = Mockito.spy(Ignition.getOrStart(igniteConfiguration));
+        Mockito.doNothing().when(ignite).close();
     }
 
     public static ClientAPI loadClientIgnite(IgniteConfiguration igniteConfiguration) {

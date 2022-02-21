@@ -44,6 +44,18 @@ public class PropertiesResolver {
         return Optional.ofNullable(clazz);
     }
 
+    /**
+     * @return Returns close ignite instance after run property value.
+     *         The value is true by default.
+     */
+    public boolean closeIgniteInstanceAfterRun() {
+        String closeAfterRun = systemProperties.getProperty(PropertyNames.CLOSE_IGNITE_INSTANCE_AFTER_RUN);
+        if (closeAfterRun == null) {
+            closeAfterRun = properties.getProperty(PropertyNames.CLOSE_IGNITE_INSTANCE_AFTER_RUN);
+        }
+        return closeAfterRun == null || Boolean.parseBoolean(closeAfterRun);
+    }
+
     public static PropertiesResolver loadProperties() {
         return new PropertiesResolver(new Properties());
     }
