@@ -20,11 +20,13 @@ import java.util.function.Supplier;
 public class ClientAPI {
     private final TestDirectories testDirectories;
     private final Ignite ignite;
+    private final Ignite notMockedIgnite;
     private final Random random = new Random();
 
     private ClientAPI(IgniteConfiguration igniteConfiguration) {
         testDirectories = new TestDirectories();
-        ignite = Mockito.spy(Ignition.getOrStart(igniteConfiguration));
+        notMockedIgnite = Ignition.getOrStart(igniteConfiguration);
+        ignite = Mockito.spy(notMockedIgnite);
         Mockito.doNothing().when(ignite).close();
     }
 
@@ -42,6 +44,10 @@ public class ClientAPI {
 
     public Ignite getIgnite() {
         return ignite;
+    }
+
+    public Ignite getNotMockedIgnite() {
+        return notMockedIgnite;
     }
 
     public Random getRandom() {

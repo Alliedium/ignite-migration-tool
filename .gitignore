@@ -59,8 +59,10 @@ Thumbs.db
 /products/**/maven*
 /products/**/tests-ignitemigrationtool/
 /products/**/tests-patchtools/
+/products/**/logs/
 **/avro_original/
 **/avro_transformed/
+**/test-reports/
 /products/**/test-classes/*
 /products/**/results*.xml
 *.jar

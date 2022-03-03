@@ -5,7 +5,7 @@
 cd ..
 mvn clean package -Dmaven.test.skip=true
 
-# start Apache Ignite cluster and fix its topology by activating it 
+# start Apache Ignite cluster and fix its topology by activating it
 #
 docker rm -f $(docker ps -aq)
 docker-compose up -d --build ignite igniteactivator
@@ -15,10 +15,10 @@ sleep 5
 
 source ./demo/common.sh
 
-# populate the cluster with test data, then export all data and meta data from the 
+# populate the cluster with test data, then export all data and meta data from the
 #   cluster into an isolated directory in form of Avro files
 #
-executeStep io.github.alliedium.ignite.migration.patches.CreateIgniteDataAndWriteIntoAvro ./avro_original $@
+executeStep io.github.alliedium.ignite.migration.patches.CreateDataForJoin ./avro_original $@
 
 # stop Apache Ignite cluster to stress that Avro files provide a self-sufficient snapshot of the data
 #
@@ -27,7 +27,7 @@ docker-compose down
 # apply a simple transformation
 # (adding a new field to first cache, removing another field from second cache) to Avro files
 #
-executeStep io.github.alliedium.ignite.migration.patches.AlterCachesDemoPatch ./avro_original ./avro_transformed $@
+executeStep io.github.alliedium.ignite.migration.patches.MakeJoin ./avro_original ./avro_transformed $@
 
 # start a new Apache Ignite cluster
 #
@@ -38,7 +38,7 @@ sleep 5
 
 # upload the transformed Avro files to the cluster
 #
-executeStep io.github.alliedium.ignite.migration.patches.LoadDataFromAvroAndCheckPatchApplied ./avro_transformed $@
+executeStep io.github.alliedium.ignite.migration.patches.CheckJoin ./avro_transformed $@
 
 # shutdown the cluster
 #

@@ -9,6 +9,7 @@ import java.util.Map;
 @Data
 @Builder
 public class Flight {
+    private final int id;
     private final List<Person> personList;
     private final Map<Person, Integer> tickets;
 }

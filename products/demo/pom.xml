@@ -34,6 +34,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.testng</groupId>
+            <artifactId>testng</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-core</artifactId>
         </dependency>
@@ -80,6 +84,23 @@
         <directory>${buildDirectory}</directory>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.surefire</groupId>
+                        <artifactId>surefire-testng</artifactId>
+                        <version>${surefire.version}</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <reportFormat>plain</reportFormat>
+                    <!-- Activate the use of TCP to transmit events to the plugin -->
+                    <forkNode implementation="org.apache.maven.plugin.surefire.extensions.SurefireForkNodeFactory"/>
+                </configuration>
+            </plugin>
+            <plugin>
               <artifactId>maven-assembly-plugin</artifactId>
               <executions>
                 <execution>
@@ -93,7 +114,7 @@
                   <archive>
                     <manifest>
                       <addClasspath>true</addClasspath>
-                      <mainClass>io.github.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                      <mainClass>io.github.alliedium.ignite.migration.patches.CreateIgniteDataAndWriteIntoAvro</mainClass>
                     </manifest>
                   </archive>
                   <descriptorRefs>
@@ -109,7 +130,7 @@
                 <archive>
                   <manifest>
                     <addClasspath>true</addClasspath>
-                    <mainClass>io.github.alliedium.ignite.migration.demotools.CreateIgniteDataAndWriteIntoAvro</mainClass>
+                    <mainClass>io.github.alliedium.ignite.migration.patches.CreateIgniteDataAndWriteIntoAvro</mainClass>
                   </manifest>
                 </archive>
               </configuration>
