@@ -1,0 +1,26 @@
+name: CI for Demo
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: 'zulu'
+
+      - name: DemoTests
+        run: mvn test -DbuildDirectory=./test-reports -DfailIfNoTests=false
+          -Dtest=io.github.alliedium.ignite.migration.patches.DemoTest -am
+
+      - name: Publish Test Report
+        if: ${{ always() }}
+        uses: scacap/action-surefire-report@v1
+        with:
+          check_name: show-test-results
+          report_paths: 'demo/test-reports/surefire-reports/TEST-*.xml'

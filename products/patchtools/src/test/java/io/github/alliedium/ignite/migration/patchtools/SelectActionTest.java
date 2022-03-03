@@ -1,9 +1,6 @@
 package io.github.alliedium.ignite.migration.patchtools;
 
-import io.github.alliedium.ignite.migration.test.model.Flight;
-import io.github.alliedium.ignite.migration.test.model.IdContainer;
-import io.github.alliedium.ignite.migration.test.model.Passport;
-import io.github.alliedium.ignite.migration.test.model.Person;
+import io.github.alliedium.ignite.migration.test.model.*;
 import org.apache.ignite.IgniteCache;
 import org.apache.ignite.binary.BinaryObject;
 import org.apache.ignite.cache.affinity.AffinityKey;
@@ -96,20 +93,7 @@ public class SelectActionTest extends BaseTest {
         cacheConfiguration.setName(cacheName);
         IgniteCache<Integer, Flight> cache = ignite.createCache(cacheConfiguration);
 
-        Passport passport1 = new Passport("B21409");
-        Passport passport2 = new Passport("B21410");
-        Passport passport3 = new Passport("B21411");
-        Person p1 = new Person("firstPerson", passport1, 20);
-        Person p2 = new Person("secondPerson", passport2, 30);
-        Person p3 = new Person("thirdPerson", passport3, 40);
-        Map<Person, Integer> tickets = new HashMap<>();
-        tickets.put(p1, 123);
-        tickets.put(p2, 1234);
-        tickets.put(p3, 12345);
-        Flight flight = Flight.builder()
-                .personList(Stream.of(p1, p2, p3).collect(Collectors.toList()))
-                .tickets(tickets)
-                .build();
+        Flight flight = FlightFactory.create();
 
         cache.put(1, flight);
 
@@ -123,7 +107,7 @@ public class SelectActionTest extends BaseTest {
         context.patchCachesWhichEndWith(cacheName, cachePath -> {
             TransformAction<TransformOutput> action = new SelectAction.Builder()
                     .context(context)
-                    .fields("key", "personList", "tickets")
+                    .fields("key", "id", "personList", "tickets")
                     .from(cachePath)
                     .build();
 
