@@ -11,7 +11,7 @@ Apache Ignite Migration Tool is an open-source library for applying Apache Ignit
    2. applying database schema transformations to the exported data and writing the transformed data into a separate filesystem directory.
    3. uploading the transformed Avro files to the new cluster.
  - data and metadata transformations are defined in a way that is Avro format agnostic (which allows use of [Apache Beam](https://beam.apache.org/) for applying database transformations).
- - The tool provides minimal patch-tools API for patching data using [Apache Beam](https://beam.apache.org/
+ - The tool provides minimal patch-tools API for patching data using [Apache Beam](https://beam.apache.org/)
  - Data and metadata (excluding QueryEntity information which is encoded into the Avro table field types) transformations are applied to Avro files and do not require a live Apache Ignite cluster.
  - The tool can be used for creating data backups that are Apache Ignite version independent (assuming definitions of `CacheConfiguration` and `AffinityKey` classes are stable).
  - Source and target cluster topologies do not have to be the same.
