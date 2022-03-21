@@ -1,7 +1,8 @@
 name: Publish modules to the Maven Central Repository and GitHub Packages
 on:
-  release:
-    types: [created]
+  # Allows to run this workflow from another workflow
+  workflow_call:
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -16,27 +17,6 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
 
-      - name: Update project version in pom files
-        run: |
-          git config --global user.name $GITHUB_USERNAME
-          git config --global user.email $GITHUB_USERNAME@users.noreply.github.com
-
-          mvn -B versions:set -DnewVersion=${RELEASE_VERSION} -DgenerateBackupPoms=false
-
-        env:
-          GITHUB_USERNAME: ${{ github.actor }}
-          RELEASE_VERSION: ${{ github.event.release.tag_name }}
-
-      - name: Create a release PR into repository
-        uses: peter-evans/create-pull-request@v3
-        with:
-          commit-message: Release ${{ github.event.release.tag_name }}
-          base: main
-          branch: release-${{ github.event.release.tag_name }}-change
-
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
-
       - name: Publish to the Maven Central Repository
         run: mvn -Ppublish,central --batch-mode deploy
         env:
@@ -48,9 +28,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'zulu'
-
-      - name: Build with Maven
-        run: mvn -B package --file pom.xml
 
       - name: Publish to GitHub Packages
         run: mvn -Ppublish,github --batch-mode deploy

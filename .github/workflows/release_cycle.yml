@@ -1,0 +1,16 @@
+name: Release Cycle
+on:
+  release:
+    types: [created]
+jobs:
+  mainCI:
+    uses: ./.github/workflows/main.yml
+  demoCI:
+    needs: [ mainCI ]
+    uses: ./.github/workflows/demo.yml
+  checkRelease:
+    needs: [ mainCI, demoCI ]
+    uses: ./.github/workflows/check_release.yml
+  release:
+    needs: [ mainCI, demoCI, checkRelease ]
+    uses: ./.github/workflows/publish.yml
