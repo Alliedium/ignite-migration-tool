@@ -14,3 +14,15 @@ jobs:
   release:
     needs: [ mainCI, demoCI, checkRelease ]
     uses: ./.github/workflows/publish.yml
+  updateReleaseSuccess:
+    needs: [ release ]
+    uses: ./.github/workflows/update_release.yml
+    with:
+      text: "Release Cycle finished with success"
+  updateReleaseFailed:
+    needs: [ release ]
+    if: always() && needs.release.result != 'success'
+    uses: ./.github/workflows/update_release.yml
+    with:
+      text: "!!ATTENTION!! Release Cycle failed, please see actions results"
+
