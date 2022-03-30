@@ -20,6 +20,8 @@ jobs:
       - name: Update project version in pom files
         run: |
           pwd
+          cd products
+          pwd
           git config --global user.name $GITHUB_USERNAME
           git config --global user.email $GITHUB_USERNAME@users.noreply.github.com
 
