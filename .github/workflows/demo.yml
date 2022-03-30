@@ -23,12 +23,14 @@ jobs:
           distribution: 'zulu'
 
       - name: DemoTests
-        run: mvn test -DbuildDirectory=./test-reports -DfailIfNoTests=false
-          -Dtest=io.github.alliedium.ignite.migration.patches.DemoTest -am
+        run: |
+          cd products
+          mvn test -DbuildDirectory=./test-reports -DfailIfNoTests=false \
+            -Dtest=io.github.alliedium.ignite.migration.patches.DemoTest -am
 
       - name: Publish Test Report
         if: ${{ always() }}
         uses: scacap/action-surefire-report@v1
         with:
           check_name: show-test-results
-          report_paths: 'demo/test-reports/surefire-reports/TEST-*.xml'
+          report_paths: 'products/demo/test-reports/surefire-reports/TEST-*.xml'

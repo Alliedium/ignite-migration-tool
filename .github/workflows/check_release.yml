@@ -14,6 +14,8 @@ jobs:
       - name: Check release correctness
         run: |
           pwd
+          cd products
+          pwd
           project_version=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
           if [ $project_version != $RELEASE_VERSION ]; then
             echo "Project version and Release version are not equal, please create tag using workflow specified for this"
@@ -34,4 +36,6 @@ jobs:
           RELEASE_VERSION: ${{ github.event.release.tag_name }}
 
       - name: Build with Maven
-        run: mvn -B package --file pom.xml -Dmaven.test.skip
+        run: |
+          cd products
+          mvn -B package --file pom.xml -Dmaven.test.skip
