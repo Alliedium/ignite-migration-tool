@@ -27,9 +27,9 @@ public class Utils {
     }
 
     /**
-     * Can return null in case provided object is null, such happens when an object needs to be present
+     * Can return null in case provided object is null, this happens when an object needs to be present
      * even if it's value is null
-     * @param object
+     * @param object - the object which will be serialized to XML
      * @return serialized object (string)
      */
     public static String serializeObjectToXML(Object object) {
@@ -47,11 +47,10 @@ public class Utils {
     }
 
     /**
-     * Can return null in case provided xml is null or empty, such happens when an object needs to be present
+     * Can return null in case provided xml is null or empty, this happens when an object needs to be present
      * even if it's value is null
-     * @param xml
-     * @param <T>
-     * @return
+     * @param xml - string
+     * @return object of required type or throws exception in case type mismatched
      */
     public static <T> T deserializeFromXML(String xml) {
         if (xml == null || xml.trim().isEmpty()) {

@@ -6,9 +6,6 @@ import io.github.alliedium.ignite.migration.dao.converters.IIgniteDTOConverter;
 import io.github.alliedium.ignite.migration.dao.converters.IgniteObjectStringConverter;
 import io.github.alliedium.ignite.migration.dao.dataaccessor.IIgniteCacheDAO;
 import io.github.alliedium.ignite.migration.dao.dataaccessor.IIgniteDAO;
-import io.github.alliedium.ignite.migration.dao.dtobuilder.CacheConfigBuilder;
-import io.github.alliedium.ignite.migration.dao.dtobuilder.EntryMetaBuilder;
-import io.github.alliedium.ignite.migration.dao.dtobuilder.IDTOBuilder;
 import io.github.alliedium.ignite.migration.dao.extractors.IgniteDataExtractor;
 import io.github.alliedium.ignite.migration.dao.extractors.IgniteDataExtractorFactory;
 import io.github.alliedium.ignite.migration.dto.*;
@@ -96,13 +93,13 @@ public class IgniteScanner implements IIgniteReader {
     }
 
     private ICacheConfigurationData getCacheConfigDTO(IIgniteCacheDAO igniteCacheDAO) {
-        IDTOBuilder<ICacheConfigurationData> cacheConfigurationDTOBuilder = new CacheConfigBuilder(igniteCacheDAO.getCacheConfiguration(), converter);
-        return cacheConfigurationDTOBuilder.build();
+        String cacheConfiguration = converter.convertFromEntity(igniteCacheDAO.getCacheConfiguration());
+        return new CacheConfigurationData(cacheConfiguration);
     }
 
     private ICacheEntryMetaData getCacheEntryMetaDTO(IIgniteCacheDAO igniteCacheDAO) {
-        IDTOBuilder<ICacheEntryMetaData> cacheEntryMetaDTOBuilder = new EntryMetaBuilder(igniteCacheDAO.getCacheQueryEntities(), converter);
-        return cacheEntryMetaDTOBuilder.build();
+        String cacheConfiguration = converter.convertFromEntity(igniteCacheDAO.getCacheQueryEntities());
+        return new CacheEntryMetaData(cacheConfiguration);
     }
 
     /**
