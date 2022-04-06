@@ -15,7 +15,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * Provides an async implementation of IDispatcher, distributes messages between subscribers and publishers,
  * Accepts elements limit property in order to regulate throughput of entre tool.
  * The throughput is critical if there are RAM limitation.
- * @param <DTO>
  */
 public class Dispatcher<DTO> implements IDispatcher<DTO>, Runnable {
 

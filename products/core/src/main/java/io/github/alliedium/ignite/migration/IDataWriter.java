@@ -6,7 +6,6 @@ public interface IDataWriter<T> extends AutoCloseable {
 
     /**
      * Optional autocloseable
-     * @throws Exception
      */
     @Override
     default void close() throws Exception {
