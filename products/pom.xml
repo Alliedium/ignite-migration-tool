@@ -29,6 +29,31 @@
             <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
+    <scm>
+        <connection>scm:git:https://github.com/Alliedium/ignite-migration-tool.git</connection>
+        <developerConnection>scm:git:https://github.com/Alliedium/ignite-migration-tool.git</developerConnection>
+        <url>https://github.com/Alliedium/ignite-migration-tool/tree/main</url>
+    </scm>
+    <developers>
+        <developer>
+            <name>Peter Gagarinov</name>
+            <email>pgagarinov@alliedtesting.com</email>
+            <organization>Alliedium</organization>
+            <organizationUrl>https://github.com/Alliedium</organizationUrl>
+        </developer>
+        <developer>
+            <name>Ilya Roublev</name>
+            <email>irublev@alliedtesting.com</email>
+            <organization>Alliedium</organization>
+            <organizationUrl>https://github.com/Alliedium</organizationUrl>
+        </developer>
+        <developer>
+            <name>Eduard Baranetchi</name>
+            <email>ebaranetchi@alliedtesting.com</email>
+            <organization>Alliedium</organization>
+            <organizationUrl>https://github.com/Alliedium</organizationUrl>
+        </developer>
+    </developers>
 
     <profiles>
         <profile>
@@ -187,6 +212,20 @@
                         <id>attach-javadocs</id>
                         <goals>
                             <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
                         </goals>
                     </execution>
                 </executions>
