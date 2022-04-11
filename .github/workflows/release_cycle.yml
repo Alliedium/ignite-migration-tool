@@ -14,6 +14,11 @@ jobs:
   release:
     needs: [ mainCI, demoCI, checkRelease ]
     uses: ./.github/workflows/publish.yml
+    secrets:
+      OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+      OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+      MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+      MAVEN_GPG_PRIVATE_KEY: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
   updateReleaseSuccess:
     needs: [ release ]
     uses: ./.github/workflows/update_release.yml
