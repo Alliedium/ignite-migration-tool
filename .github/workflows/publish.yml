@@ -31,7 +31,7 @@ jobs:
       - name: Publish to the Maven Central Repository
         run: |
           cd products
-          mvn -Ppublish,central --batch-mode deploy
+          mvn -Ppublish,central --batch-mode -Dmaven.test.skip deploy
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
@@ -46,6 +46,6 @@ jobs:
       - name: Publish to GitHub Packages
         run: |
           cd products
-          mvn -Ppublish,github --batch-mode deploy
+          mvn -Ppublish,github --batch-mode -Dmaven.test.skip deploy
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
